@@ -2,6 +2,11 @@
 # Auto-generated file by fortdep. Do not edit!
 #
 stella_mod = \
+	 adjoint_distfn_arrays.o \
+	 adjoint_field_arrays.o \
+	 adjoint_p_derivatives.o \
+	 adjoint_run.o \
+	 adjoint_write_files.o \
 	 command_line.o \
 	 common_types.o \
 	 constants.o \
@@ -71,6 +76,52 @@ test_vmec_to_stella_geometry_interface_mod = \
 	 test_vmec_to_stella_geometry_interface.o \
 	 vmec_to_stella_geometry_interface.o 
 
+adjoint_distfn_arrays.o: 
+adjoint_field_arrays.o: 
+adjoint_p_derivatives.o: \
+	 adjoint_distfn_arrays.o \
+	 adjoint_field_arrays.o \
+	 constants.o \
+	 dist_fn_arrays.o \
+	 dist_redistribute.o \
+	 fields.o \
+	 fields_arrays.o \
+	 gyro_averages.o \
+	 kt_grids.o \
+	 millerlocal.o \
+	 mirror_terms.o \
+	 mp.o \
+	 parallel_streaming.o \
+	 physics_flags.o \
+	 redistribute.o \
+	 species.o \
+	 stella_geometry.o \
+	 stella_layouts.o \
+	 stella_time.o \
+	 time_advance.o \
+	 volume_averages.o \
+	 vpamu_grids.o \
+	 zgrid.o 
+adjoint_run.o: \
+	 adjoint_distfn_arrays.o \
+	 adjoint_field_arrays.o \
+	 adjoint_p_derivatives.o \
+	 constants.o \
+	 dist_fn_arrays.o \
+	 dist_redistribute.o \
+	 fields.o \
+	 fields_arrays.o \
+	 kt_grids.o \
+	 redistribute.o \
+	 stella_diagnostics.o \
+	 stella_geometry.o \
+	 stella_layouts.o \
+	 stella_time.o \
+	 vpamu_grids.o \
+	 zgrid.o 
+adjoint_write_files.o: \
+	 adjoint_field_arrays.o \
+	 stella_geometry.o 
 command_line.o: 
 common_types.o: 
 constants.o: 
@@ -141,6 +192,7 @@ fft_work.o: \
 	 constants.o \
 	 mp.o 
 fields.o: \
+	 adjoint_field_arrays.o \
 	 common_types.o \
 	 constants.o \
 	 dist_fn_arrays.o \
@@ -162,6 +214,7 @@ fields.o: \
 	 spfunc.o \
 	 stella_geometry.o \
 	 stella_layouts.o \
+	 stella_time.o \
 	 stella_transforms.o \
 	 volume_averages.o \
 	 vpamu_grids.o \
@@ -423,6 +476,11 @@ spfunc.o: \
 spl.o: \
 	 constants.o 
 stella.o: \
+	 adjoint_distfn_arrays.o \
+	 adjoint_field_arrays.o \
+	 adjoint_p_derivatives.o \
+	 adjoint_run.o \
+	 adjoint_write_files.o \
 	 dissipation.o \
 	 dist_fn.o \
 	 dist_fn_arrays.o \
@@ -435,6 +493,7 @@ stella.o: \
 	 init_g.o \
 	 job_manage.o \
 	 kt_grids.o \
+	 millerlocal.o \
 	 mirror_terms.o \
 	 mp.o \
 	 multibox.o \
@@ -495,6 +554,7 @@ stella_geometry.o: \
 	 physics_parameters.o \
 	 text_options.o \
 	 vmec_geo.o \
+	 vmec_to_stella_geometry_interface.o \
 	 zgrid.o 
 stella_io.o: \
 	 convert.o \
@@ -538,6 +598,8 @@ test_vmec_to_stella_geometry_interface.o: \
 text_options.o: \
 	 mp.o 
 time_advance.o: \
+	 adjoint_distfn_arrays.o \
+	 adjoint_field_arrays.o \
 	 constants.o \
 	 dissipation.o \
 	 dist_fn_arrays.o \

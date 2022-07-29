@@ -82,6 +82,8 @@ module dissipation
    real, dimension(2, 2) :: time_collisions = 0.
    real :: i1fac, i2fac
 
+   logical :: init_header = .True.
+   
 contains
 
    subroutine init_dissipation
@@ -111,13 +113,16 @@ contains
          end if
          write (*, *)
       else
-         if (proc0) then
-            write (*, '(A)') "############################################################"
-            write (*, '(A)') "                         COLLISIONS"
-            write (*, '(A)') "############################################################"
-            write (*, *) 'Coll. model:     None'
-            write (*, *)
+         if(init_header) then 
+            if (proc0) then
+               write (*, '(A)') "############################################################"
+               write (*, '(A)') "                         COLLISIONS"
+               write (*, '(A)') "############################################################"
+               write (*, *) 'Coll. model:     None'
+               write (*, *)
+            end if
          end if
+         init_header = .False.
       end if
 
    end subroutine init_dissipation

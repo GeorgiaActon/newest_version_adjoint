@@ -11,6 +11,8 @@ module millerlocal
    public :: finish_local_geo
    public :: local
 
+   public :: del, np0
+
    private
 
    integer :: nzed_local
@@ -59,6 +61,12 @@ module millerlocal
 
    logical :: defaults_initialized = .false.
 
+   !real, dimension (11) :: del 
+   real :: del = 1E-006
+   integer :: np0 = 11
+   !real :: del_rhoc, del_rmaj, del_rgeo, del_shift, del_kappa
+   !real :: del_kapprim, del_qinp, del_shat, del_tri, del_triprim, del_betaprim
+   
 contains
 
    subroutine init_local_defaults
@@ -98,7 +106,7 @@ contains
 
    end subroutine init_local_defaults
 
-   subroutine read_local_parameters(nzed, nzgrid, local_out)
+   subroutine read_local_parameters(nzed, nzgrid, local_out, adjoint_var)
 
       use file_utils, only: input_unit_exist
       use common_types, only: flux_surface_type
@@ -112,34 +120,89 @@ contains
       integer :: in_file, np, j
       logical :: exist
 
+      real, dimension (:), allocatable:: local_values
+      integer, optional, intent (in) :: adjoint_var
+      
       namelist /millergeo_parameters/ rhoc, rmaj, shift, qinp, shat, &
          kappa, kapprim, tri, triprim, rgeo, betaprim, &
          betadbprim, d2qdr2, d2psidr2, &
-         nzed_local, read_profile_variation, write_profile_variation
+         nzed_local, read_profile_variation, write_profile_variation, np0, del
+         !del_rhoc, &
+         !del_rmaj, del_rgeo, del_shift, del_kappa, del_kapprim, del_qinp, del_shat, del_tri, &
+         !del_triprim, del_betaprim
+
 
       call init_local_defaults
 
-      in_file = input_unit_exist("millergeo_parameters", exist)
+      !in_file = input_unit_exist("millergeo_parameters", exist)
+      if(present(adjoint_var)) then 
+         if(adjoint_var .ne. 0) then
+            in_file = input_unit_exist("millergeo_parameters", exist)
+         else
+            in_file = input_unit_exist("millergeo_parameters", exist)
+         end if
+      else
+         in_file = input_unit_exist("millergeo_parameters", exist)
+      end if
+      
       if (exist) read (unit=in_file, nml=millergeo_parameters)
 
-      local%rhoc = rhoc
-      local%rmaj = rmaj
-      local%rgeo = rgeo
-      local%shift = shift
-      local%kappa = kappa
-      local%kapprim = kapprim
-      local%qinp = qinp
-      local%shat = shat
-      local%tri = tri
-      local%triprim = triprim
-      local%betaprim = betaprim
-      local%betadbprim = betadbprim
-      local%d2qdr2 = d2qdr2
-      local%d2psidr2 = d2psidr2
+      allocate(local_values(14))
+
+      ! del(1) = del_rhoc
+      ! del(2) = del_rmaj 
+      ! del(3) = del_rgeo
+      ! del(4) = del_shift
+      ! del(5) = del_kappa
+      ! del(6) = del_kapprim
+      ! del(7) = del_qinp
+      ! del(8) = del_shat
+      ! del(9) = del_tri
+      ! del(10) = del_triprim
+      ! del(11) = del_betaprim 
+
+      local_values(1) = rhoc
+      local_values(2) = rmaj
+      local_values(3) = rgeo
+      local_values(4) = shift
+      local_values(5) = kappa
+      local_values(6) = kapprim
+      local_values(7) = qinp
+      local_values(8) = shat
+      local_values(9) = tri
+      local_values(10) = triprim
+      local_values(11) = betaprim
+      local_values(12) = betadbprim
+      local_values(13) = d2qdr2
+      local_values(14) = d2psidr2
+
+      rhoc0 = rhoc
+      
+      if(present(adjoint_var)) then
+         if(adjoint_var .ne. 0 ) then
+            local_values(adjoint_var) = local_values(adjoint_var) + del !del(adjoint_var)
+         end if
+      end if
+
+      local%rhoc = local_values(1)
+      local%rmaj = local_values(2)
+      local%rgeo = local_values(3)
+      local%shift = local_values(4)
+      local%kappa = local_values(5)
+      local%kapprim = local_values(6)
+      local%qinp = local_values(7)
+      local%shat = local_values(8)
+      local%tri = local_values(9)
+      local%triprim = local_values(10)
+      local%betaprim = local_values(11)
+      local%betadbprim = local_values(12)
+      local%d2qdr2 = local_values(13)
+      local%d2psidr2 = local_values(14)
+   
       local%zed0_fac = 1.0
 
       ! following two variables are not inputs
-      local%dr = 1.e-3 * (rhoc / rmaj)
+      local%dr = 1.e-3! * (local%rhoc / local%rmaj)
       local%rhotor = rhotor
       local%psitor_lcfs = psitor_lcfs
       local%drhotordrho = drhotordrho
@@ -148,9 +211,9 @@ contains
 
       ! the next three variablaes are for multibox simulations
       ! with radial variation
-      local%rhoc_psi0 = rhoc
-      local%qinp_psi0 = qinp
-      local%shat_psi0 = shat
+      local%rhoc_psi0 = local%rhoc
+      local%qinp_psi0 = local%qinp
+      local%shat_psi0 = local%shat
 
       ! first get nperiod corresponding to input number of grid points
       nz2pi = nzed / 2
@@ -195,6 +258,8 @@ contains
       end if
 
       local_out = local
+
+      deallocate(local_values) 
 
    end subroutine read_local_parameters
 
@@ -416,11 +481,11 @@ contains
          theta(j) = j * (2 * np - 1) * pi / real(nz)
          do i = 1, 3
             rmin = local%rhoc + dr(i)
-            Rr(i, j) = Rpos(rmin, theta(j), j)
+            Rr(i,j) = Rpos(rmin, theta(j),j)
             Zr(i, j) = Zpos(rmin, theta(j), j)
          end do
       end do
-
+      
       if (.not. allocated(delthet)) allocate (delthet(-nz:nz - 1))
       ! get delta theta as a function of theta
       delthet = theta(-nz + 1:) - theta(:nz - 1)
@@ -428,7 +493,7 @@ contains
       ! get dR/drho and dZ/drho
       call get_drho(Rr, dRdrho)
       call get_drho(Zr, dZdrho)
-
+      
       ! get dR/dtheta and dZ/dtheta
       call get_dthet(Rr(2, :), dRdth)
       call get_dthet(Zr(2, :), dZdth)
@@ -444,13 +509,13 @@ contains
       ! this is what I call jacr or jacrho in following comments
       ! as opposed to jacobian, which is for tranformation from (psi,theta,zeta) to (R,Z,zeta)
       call get_jacrho
-
+      
       ! theta_integrate returns integral from 0 -> 2*pi
       ! note that dpsidrho here is an intermediary
       ! that requires manipulation to get final dpsidrho
       call theta_integrate(jacrho(-nz2pi:nz2pi) / Rr(2, -nz2pi:nz2pi)**2, dpsidrho)
       dpsidrho = dpsidrho / (2.*pi)
-
+         
       ! get dpsinorm/drho = (I/2*pi*q)*int_0^{2*pi} dthet jacrho/R**2
 
       ! if using input.profiles, we are given
@@ -469,7 +534,7 @@ contains
 
          ! I=Btor*R is a flux function
          ! bi = I/(Btor(psi,theta of Rgeo)*a) = Rgeo/a
-         bi = local%rgeo + dI * (rhoc - rhoc0)
+         bi = local%rgeo + dI * (local%rhoc - rhoc0)
          dpsidrho = dpsidrho * bi / local%qinp
       end if
 
@@ -486,16 +551,14 @@ contains
       ! get dI/drho
       call get_dIdrho(dpsidrho, grho, dIdrho)
       dIdrho_out = dIdrho
-
-      ! get djacobian/drho*dpsi/drho and djacr/drho
-      call get_djacdrho(dpsidrho, dIdrho, grho)
-
+      
       ! get d2R/drho2 and d2Z/drho2
+      call get_djacdrho(dpsidrho, dIdrho, grho)
       call get_d2RZdr2
-
+            
       d2R = d2Rdr2
-      d2Z = d2Zdr2
-
+      d2Z = d2Zdr2         
+      
       ! get theta derivative of d2R/drho2 and d2Z/drho2
       call get_dthet(d2Rdr2, d2Rdr2dth)
       call get_dthet(d2Zdr2, d2Zdr2dth)
@@ -528,6 +591,7 @@ contains
 
       ! calculate b . grad theta
       gradpar = dpsidrho / (bmag * jacrho)
+
       ! b . grad B
       gradparb = gradpar * dBdth
 
@@ -563,7 +627,7 @@ contains
       ! note that the definitions of gbdrift, gbdrift0, dgbdriftdr and dgbdrift0dr
       ! are such that it gets multiplied by vperp2, not mu.  This is in contrast to
       ! Michael's GS3 notes
-
+      
       ! this is bhat/B x (grad B/B) . grad alpha * 2 * dpsiN/drho
       gbdrift = 2.0 * (-dBdrho + cross * dBdth * dpsidrho / bmag**2) / bmag
       ! this is bhat/B x (bhat . grad bhat) . grad alpha * 2 * dpsiN/drho
@@ -625,9 +689,9 @@ contains
       ! interpolate here
       if (zed_equal_arc) then
          call theta_integrate(1./gradpar, dum)
-         gradpararc = (theta(nz) - theta(-nz)) / ((2 * np - 1) * dum)
+         gradpararc = (theta(nz) - theta(-nz)) / ((2 * np - 1) * dum)         
          call theta_integrate_indef(gradpararc / gradpar, arc)
-
+         
          allocate (zed_arc(-nzgrid:nzgrid))
 
          call geo_spline(arc, theta, zed_in, zed_arc)
@@ -685,6 +749,7 @@ contains
          call geo_spline(theta, dgds21dr, zed_in, dgds21dr_out)
          call geo_spline(theta, dgds22dr, zed_in, dgds22dr_out)
          call geo_spline(theta, djacdrho / dpsidrho, zed_in, djacdrho_out)
+
       end if
 
       ! get the toroidal component of the magnetic field
@@ -741,10 +806,10 @@ contains
             Zr(2, i)
       end do
       close (1001)
-
+      
       defaults_initialized = .false.
 
-   end subroutine get_local_geo
+   end subroutine get_local_geo 
 
    subroutine allocate_arrays(nr, nz)
 
@@ -827,7 +892,7 @@ contains
       if (allocated(delthet)) deallocate (delthet)
       if (allocated(bmag_psi0)) deallocate (bmag_psi0)
       if (allocated(grho_psi0)) deallocate (grho_psi0)
-
+      
    end subroutine deallocate_arrays
 
    subroutine finish_local_geo
@@ -847,7 +912,7 @@ contains
       real, dimension(:, -nz:), intent(in) :: f
       real, dimension(-nz:), intent(out) :: df
 
-      df = 0.5 * (f(3, :) - f(1, :)) / local%dr
+      df = 0.5*(f(3, :) - f(1, :)) / local%dr
 
    end subroutine get_drho
 
@@ -888,7 +953,7 @@ contains
       df(nz) = df(-nz)
 
    end subroutine get_dthet
-
+   
    subroutine get_jacrho
 
       implicit none
@@ -926,7 +991,7 @@ contains
       gpsi = grho * dpsidrho
 
    end subroutine get_gradrho
-
+   
    subroutine get_dIdrho(dpsidrho, grho, dIdrho)
 
       use constants, only: pi
@@ -977,18 +1042,18 @@ contains
    end subroutine get_djacdrho
 
    subroutine get_d2RZdr2
-
-      implicit none
-
-      ! get factor common to both d2R/drho2 and d2Z/drho2
-      d2Rdr2 = ((djacrdrho - jacrho * dRdrho / Rr(2, :)) / Rr(2, :) &
-                - dRdrho * d2Zdrdth + dZdrho * d2Rdrdth) / (dRdth**2 + dZdth**2)
-
-      d2Zdr2 = -d2Rdr2 * dRdth
-      d2Rdr2 = d2Rdr2 * dZdth
-
+     
+     implicit none
+     
+     ! get factor common to both d2R/drho2 and d2Z/drho2                                                                                                                        
+     d2Rdr2 = ((djacrdrho - jacrho * dRdrho / Rr(2, :)) / Rr(2, :) &
+          - dRdrho * d2Zdrdth + dZdrho * d2Rdrdth) / (dRdth**2 + dZdth**2)
+     
+     d2Zdr2 = -d2Rdr2 * dRdth
+     d2Rdr2 = d2Rdr2 * dZdth
+     
    end subroutine get_d2RZdr2
-
+    
    subroutine get_dgr2dr(dpsidrho, grho)
 
       implicit none
@@ -1287,7 +1352,7 @@ contains
       end do
 
    end subroutine theta_integrate_indef
-
+      
    function Rpos(r, theta, j)
 
       use constants, only: pi

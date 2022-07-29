@@ -264,7 +264,7 @@ contains
                               * (den0 + 2.0 * zi * spread(vpa, 2, nmu) * upar0) &
                               * spread(maxwell_mu(ia, iz, :, is), 1, nvpa) * spread(maxwell_vpa(:, is), 2, nmu) * maxwell_fac(is)
       end do
-
+      
    end subroutine ginit_default
 
    ! initialize two kys and kx=0

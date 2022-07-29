@@ -8,6 +8,8 @@ module stella_diagnostics
    public :: write_radial_fluxes, write_radial_moments
    public :: nsave
 
+   public :: omega_vs_time, navg
+   
    private
 
    integer :: ntg_out
@@ -336,7 +338,7 @@ contains
             deallocate (phiavg, phioldavg)
          end if
       end if
-
+            
       !> only write data to file every nwrite time steps
       if (mod(istep, nwrite) /= 0) return
 

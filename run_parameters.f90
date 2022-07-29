@@ -103,9 +103,9 @@ contains
          drifts_implicit = .false.
          driftkinetic_implicit = .false.
          maxwellian_inside_zed_derivative = .false.
-         mirror_semi_lagrange = .true.
+         mirror_semi_lagrange = .false. !.true.
          mirror_linear_interp = .false.
-         stream_matrix_inversion = .false.
+         stream_matrix_inversion = .true.! .false.
          delt_option = 'default'
          lu_option = 'default'
          zed_upwind = 0.02
@@ -118,7 +118,7 @@ contains
          rng_seed = -1 !negative values use current time as seed
          ky_solve_radial = 0
          ky_solve_real = .false.
-         mat_gen = .false.
+         mat_gen = .true. !.false.
          mat_read = .false.
          tend = -1.0
          nstep = -1

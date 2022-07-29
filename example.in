@@ -22,10 +22,13 @@
  tri = 0.0
  triprim = 0.0
  betaprim = 0.0
-
+ 
  d2qdr2 = 0.0
  d2psidr2 = 0.0
  betadbprim = 0.0
+
+ np0 = 11
+ del = 0.000001
 /
 
 &physics_flags
@@ -76,11 +79,11 @@
  zed_upwind = 0.02
  time_upwind = 0.02
  vpa_upwind = 0.02
- delt = 0.03
- nstep = 2000
+ delt = 0.01
+ nstep = 3000
 /
 &species_knobs
- nspec= 1
+ nspec= 2
  species_option = 'stella'
 /
 &species_parameters_1
@@ -105,6 +108,7 @@
 
 &stella_diagnostics_knobs
  nwrite = 20
+ navg = 300
  nsave = 3000 
  save_for_restart = .false.
  write_omega = .true.
