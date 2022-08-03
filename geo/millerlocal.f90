@@ -61,11 +61,8 @@ module millerlocal
 
    logical :: defaults_initialized = .false.
 
-   !real, dimension (11) :: del 
    real :: del = 1E-006
    integer :: np0 = 11
-   !real :: del_rhoc, del_rmaj, del_rgeo, del_shift, del_kappa
-   !real :: del_kapprim, del_qinp, del_shat, del_tri, del_triprim, del_betaprim
    
 contains
 
@@ -127,39 +124,13 @@ contains
          kappa, kapprim, tri, triprim, rgeo, betaprim, &
          betadbprim, d2qdr2, d2psidr2, &
          nzed_local, read_profile_variation, write_profile_variation, np0, del
-         !del_rhoc, &
-         !del_rmaj, del_rgeo, del_shift, del_kappa, del_kapprim, del_qinp, del_shat, del_tri, &
-         !del_triprim, del_betaprim
-
 
       call init_local_defaults
 
-      !in_file = input_unit_exist("millergeo_parameters", exist)
-      if(present(adjoint_var)) then 
-         if(adjoint_var .ne. 0) then
-            in_file = input_unit_exist("millergeo_parameters", exist)
-         else
-            in_file = input_unit_exist("millergeo_parameters", exist)
-         end if
-      else
-         in_file = input_unit_exist("millergeo_parameters", exist)
-      end if
-      
+      in_file = input_unit_exist("millergeo_parameters", exist)
       if (exist) read (unit=in_file, nml=millergeo_parameters)
 
       allocate(local_values(14))
-
-      ! del(1) = del_rhoc
-      ! del(2) = del_rmaj 
-      ! del(3) = del_rgeo
-      ! del(4) = del_shift
-      ! del(5) = del_kappa
-      ! del(6) = del_kapprim
-      ! del(7) = del_qinp
-      ! del(8) = del_shat
-      ! del(9) = del_tri
-      ! del(10) = del_triprim
-      ! del(11) = del_betaprim 
 
       local_values(1) = rhoc
       local_values(2) = rmaj
@@ -180,7 +151,7 @@ contains
       
       if(present(adjoint_var)) then
          if(adjoint_var .ne. 0 ) then
-            local_values(adjoint_var) = local_values(adjoint_var) + del !del(adjoint_var)
+            local_values(adjoint_var) = local_values(adjoint_var) + del
          end if
       end if
 
@@ -202,7 +173,7 @@ contains
       local%zed0_fac = 1.0
 
       ! following two variables are not inputs
-      local%dr = 1.e-3! * (local%rhoc / local%rmaj)
+      local%dr = 1.e-3 * (local%rhoc / local%rmaj)
       local%rhotor = rhotor
       local%psitor_lcfs = psitor_lcfs
       local%drhotordrho = drhotordrho

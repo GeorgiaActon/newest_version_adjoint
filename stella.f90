@@ -1,4 +1,4 @@
-program stella
+`program stella
 
    use redistribute, only: scatter
    use job_manage, only: time_message, checkstop, job_fork
@@ -32,9 +32,9 @@ program stella
 
    integer :: istep0, istep, ierr
    integer :: istatus
-   real, dimension(2) :: time_init = 0.
-   real, dimension(2) :: time_diagnostics = 0.
-   real, dimension(2) :: time_total = 0.
+   real(8), dimension(2) :: time_init = 0.
+   real(8), dimension(2) :: time_diagnostics = 0.
+   real(8), dimension(2) :: time_total = 0.
 
    !! For Adjoint
    logical :: header_printed = .False.
@@ -48,12 +48,12 @@ program stella
 
    integer :: ivmu, iz
    integer :: no_p
+   real :: istep_final
    
    call parse_command_line()
 
    !> Initialize stella
    call init_stella(istep0, get_git_version(), get_git_date())
-
    !> Diagnose stella
    if (debug) write (*, *) 'stella::diagnose_stella'
    if (istep0 == 0) call diagnose_stella(istep0)
@@ -99,6 +99,8 @@ program stella
       call flush_output_file(ierr)
       istep = istep + 1
    end do
+
+   istep_final = istep
    
    if(adjoint) then
       !! Adjoint - Get growth rat + S=store final values of g and phi as gsave and phi_save
@@ -144,30 +146,30 @@ program stella
     use millerlocal, only: del
     !use adjoint_p_derivatives, only: integrate_unpert
 
-    use adjoint_write_files, only: write_files_derivative, write_files_delta
+    use adjoint_write_files, only: write_files_derivative, write_files_omega
 
     implicit none
 
     integer, intent (in) :: no_p
     integer :: adjoint_var
 
-    logical :: debug = .False.
+    logical :: debug = .false.
     logical :: stop_convergence
     logical :: adjoint = .True.
     logical :: track_adjoint = .True.
 
     logical :: unpert = .true.
-    complex, dimension (:,:), allocatable :: lag_out
+    complex(8), dimension (:,:), allocatable :: lag_out
     
     complex :: vol_unpert
     complex, dimension(:), allocatable  :: vol_correction
 
     logical :: new_file
-    
+
     call init_stella (istep0, get_git_version(), get_git_date(), adjoint_var = 0)
     new_file = .true.
     
-    !call write_files_delta
+    call write_files_omega (istep_final)
     
     !! Adjoint - convergence arrays for adjoint variable
 
@@ -208,7 +210,7 @@ program stella
        ierr = error_unit()
        call flush_output_file (ierr)
     end do
-
+    
     !! Adjoint - Save adjoint variables & adjust to be the correct variables needed for the                                                                           
     !!           integrations
     if (debug) write (*,*) 'Adjoint_stella::get_adjoint_variables'
@@ -250,11 +252,11 @@ program stella
 
        derivative = -lag_out/(denominator)
        
-       open(12, file="change_denom.txt", status="unknown",action="write",position="append")
-       write(12, *) adjoint_var, derivative (1,1)
-       close(12)
+       ! open(12, file="change_denom.txt", status="unknown",action="write",position="append")
+       ! write(12, *) adjoint_var, derivative (1,1)
+       ! close(12)
 
-       !call write_files_derivative (adjoint_var, derivative,new_file)
+       call write_files_derivative (adjoint_var, derivative,new_file)
        new_file = .false.
        
        if (adjoint_var .eq. no_p) then
@@ -355,7 +357,7 @@ program stella
       character(500), target :: cbuff
       integer, dimension(:), allocatable  :: seed
       integer :: i, n, ierr
-      real :: delt_saved
+      real(8) :: delt_saved
 
       integer, intent (in), optional :: adjoint_var
       logical :: adjoint

@@ -474,12 +474,12 @@ contains
     use volume_averages, only: fieldline_average
 
     use stella_geometry, only:  gradpar
-    
     implicit none
 
     complex, dimension (:,:,:,:), allocatable :: int_tubes
     real, dimension (:), allocatable :: wgts
     integer :: iz, it
+
     real :: unp
     
     allocate(int_tubes(naky,nakx,-nzgrid:nzgrid,ntubes)) ; int_tubes = 0.0
@@ -503,7 +503,7 @@ contains
     call fieldline_average (int_tubes, denominator)
 
     denominator = denominator/unp
-    
+
     deallocate(int_tubes)
     deallocate(wgts)
     
@@ -525,7 +525,6 @@ contains
     use mp, only: sum_allreduce
 
     use stella_geometry, only:  gradpar
-    
     implicit none
     
     complex, dimension (:,:,-nzgrid:,:,vmu_lo%llim_proc:), intent (in) :: gin
@@ -535,7 +534,7 @@ contains
     complex, dimension (:,:), allocatable :: qout
     complex, dimension (:,:,:,:), allocatable :: int_tubes
     real, dimension (:), allocatable :: wgts
-
+    
     real :: unp
     integer :: it, iz
 

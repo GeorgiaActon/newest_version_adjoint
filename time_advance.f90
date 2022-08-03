@@ -1568,8 +1568,8 @@ contains
         iv = iv_idx(vmu_lo,ivmu)
         is = is_idx(vmu_lo,ivmu)
         call gyro_average (phi, ivmu, gyro_phi(:,:,:,:,ivmu))
-        src(:,:,:,:,ivmu) = src(:,:,:,:,ivmu) - spec(is)%z*spec(is)%dens_psi0*gyro_phi(:,:,:,:,ivmu)*code_dt!* &
-!             maxwell_vpa(iv,is)*maxwell_fac(is)*&
+        src(:,:,:,:,ivmu) = src(:,:,:,:,ivmu) - spec(is)%z*spec(is)%dens_psi0*gyro_phi(:,:,:,:,ivmu)*code_dt!* !&
+!             maxwell_vpa(iv,is)*maxwell_fac(is)!*&
 !             spread(spread(spread(maxwell_mu(1,:,imu,is), 1, naky), 2, nakx), 4,ntubes)
      end do
 

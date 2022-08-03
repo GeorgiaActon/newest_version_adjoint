@@ -341,7 +341,19 @@ contains
 
     allocate(lamv(nvpa,nmu,kxkyz_lo%llim_proc:kxkyz_lo%ulim_proc))
     allocate(lamvmu(nvpa,nmu,kxkyz_lo%llim_proc:kxkyz_lo%ulim_proc))
-       
+
+    ia = 1.
+    ! do iz = -nzgrid,nzgrid
+    !    do ivmu = vmu_lo%llim_proc, vmu_lo%ulim_alloc
+    !       iv = iv_idx(vmu_lo,ivmu)
+    !       imu = imu_idx(vmu_lo,ivmu)
+    !       is = is_idx(vmu_lo,ivmu)
+    !       lam_save(:,:,iz,:,ivmu) = lam_save(:,:,iz,:,ivmu)/&
+    !            (maxwell_vpa(iv,is)*maxwell_mu(ia,iz,imu,is)&
+    !            *maxwell_fac(is))
+    !    end do
+    ! end do
+    
     call scatter (kxkyz2vmu, lam_save, lamv)
 
     do iv = 1, nvpa
@@ -349,24 +361,12 @@ contains
     end do
 
     call gather (kxkyz2vmu, lamvmu, lam_save)
-    ia = 1.
 
     do iz = -nzgrid,nzgrid
        lam_save(:,:,iz,ia,:) = lam_save(:,:,iz,ia,:)
        chi_save(:,:,iz,ia) = chi_save(:,:,iz,ia)
     end do
-    
-    ! do iz = -nzgrid,nzgrid
-    !    do ivmu = vmu_lo%llim_proc, vmu_lo%ulim_alloc
-    !       iv = iv_idx(vmu_lo,ivmu)
-    !       imu = imu_idx(vmu_lo,ivmu)
-    !       is = is_idx(vmu_lo,ivmu)
-    !       lam_save(:,:,iz,:,ivmu) = lam_save(:,:,iz,:,ivmu)/& 
-    !            (maxwell_vpa(iv,is)*maxwell_mu(ia,iz,imu,is)&
-    !            *maxwell_fac(is))
-    !    end do
-    ! end do
-    
+        
     deallocate(lamv)
     deallocate(lamvmu)
 

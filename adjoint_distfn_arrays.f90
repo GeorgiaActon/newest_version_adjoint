@@ -4,7 +4,6 @@ module adjoint_distfn_arrays
   public :: gsave
   public :: lam_save
   public :: g_unpert
-
   public :: g_store
 
   public :: source_adjoint 
