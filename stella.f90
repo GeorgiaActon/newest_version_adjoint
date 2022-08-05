@@ -1,4 +1,4 @@
-`program stella
+program stella
 
    use redistribute, only: scatter
    use job_manage, only: time_message, checkstop, job_fork

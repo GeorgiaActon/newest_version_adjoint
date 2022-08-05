@@ -1,140 +1,137 @@
 &zgrid_parameters
-    nzed = 24
-    ntubes = 1
-    nperiod = 2
-    boundary_option = 'default'
+ nzed = 24
+ ntubes = 1
+ nperiod = 2
+ boundary_option="default"
 /
 
 &geo_knobs
-    geo_option = 'miller'
+ geo_option = 'miller'
 /
 
 &millergeo_parameters
-    nzed_local = 128
-    rhoc = 0.4999991752507623
-    shat = 0.7960105498314267
-    qinp = 1.3999742658981478
-    rmaj = 5.000002504978221
-    rgeo = 2.7777847523735413
-    shift = 9.351938229165992e-06
-    kappa = 0.9999962691039003
-    kapprim = 1.2979166478164485e-06
-    tri = -6.230310357566882e-06
-    triprim = -1.2922310537363093e-05
-    betaprim = -3.436386675857694e-08
-    d2qdr2 = 0.0
-    d2psidr2 = 0.0
-    betadbprim = 0.0
-    np0 = 11
-    del = 1e-06
+ nzed_local = 128
+ rhoc = 0.5
+ shat = 0.796
+ qinp = 1.4
+ rmaj = 5.0
+ rgeo = 2.77778
+ shift = 0.0
+ kappa = 1.0
+ kapprim = 0.0
+ tri = 0.0
+ triprim = 0.0
+ betaprim = 0.0
+ 
+ d2qdr2 = 0.0
+ d2psidr2 = 0.0
+ betadbprim = 0.0
+
+ np0 = 11
+ del = 0.000001
 /
 
 &physics_flags
-    full_flux_surface = .false.
-    nonlinear = .false.
-    adiabatic_option = 'field-line-average-term'
+ full_flux_surface = .false.
+ nonlinear = .false.
+ adiabatic_option="field-line-average-term"
 /
 
 &parameters
-    zeff = 1.0
-    beta = 0.01
-    vnew_ref = 0.01
-    rhostar = 0.01
+ zeff = 1.0
+ beta = 0.01
+ vnew_ref = 0.01
+ rhostar = 0.01
 /
 
 &vpamu_grids_parameters
-    nvgrid = 24
-    nmu = 12
-    vpa_max = 3.0
+ nvgrid = 24
+ nmu = 12
+ vpa_max = 3.0
 /
 
 &time_advance_knobs
-    explicit_option = 'rk3'
+ explicit_option="rk3"
 /
 
 &kt_grids_knobs
-    grid_option = 'range'
+ grid_option='range'
 /
-
 &kt_grids_range_parameters
-    naky = 1
-    aky_min = 0.5
-    aky_max = 0.5
+ naky = 1
+ aky_min = 0.5
+ aky_max = 0.5
 /
 
 &init_g_knobs
-    chop_side = .false.
-    phiinit = 1.0
-    restart_dir = 'nc'
-    restart_file = 'example.nc'
-    ginit_option = 'default'
-    width0 = 1.0
+ chop_side = F
+ phiinit=   1.0
+ restart_dir = "nc"
+ restart_file = "example.nc"
+ ginit_option= "default"
+ width0 = 1.0
 /
 
 &knobs
-    fphi = 1.0
-    fapar = 0.0
-    fbpar = 0.0
-    zed_upwind = 0.02
-    time_upwind = 0.02
-    vpa_upwind = 0.02
-    delt = 0.01
-    nstep = 3000
+ fphi =   1.0
+ fapar =  0.0
+ fbpar = 0.0
+ zed_upwind = 0.02
+ time_upwind = 0.02
+ vpa_upwind = 0.02
+ delt = 0.01
+ nstep = 3000
 /
-
 &species_knobs
-    nspec = 2
-    species_option = 'stella'
+ nspec= 2
+ species_option = 'stella'
 /
-
 &species_parameters_1
-    z = 1.0
-    mass = 1.0
-    dens = 1.0
-    temp = 1.0
-    tprim = 2.49
-    fprim = 0.8
-    type = 'ion'
+ z=   1.0
+ mass=   1.0
+ dens=   1.0
+ temp=   1.0
+ tprim=  2.49
+ fprim=  0.8
+ type='ion'
 /
 
 &species_parameters_2
-    z = -1.0
-    mass = 0.00027
-    dens = 1.0
-    temp = 1.0
-    tprim = 2.49
-    fprim = 0.8
-    type = 'electron'
+ z=     -1.0
+ mass=   2.7e-4
+ dens=   1.0
+ temp=   1.0
+ tprim=  2.49
+ fprim=  0.8
+ type='electron'
 /
 
 &stella_diagnostics_knobs
-    nwrite = 20
-    navg = 300
-    nsave = 3000
-    save_for_restart = .false.
-    write_omega = .true.
-    write_phi_vs_time = .true.
-    write_gvmus = .true.
-    write_gzvs = .true.
+ nwrite = 20
+ navg = 300
+ nsave = 3000 
+ save_for_restart = .false.
+ write_omega = .true.
+ write_phi_vs_time = .true.
+ write_gvmus = .true.
+ write_gzvs = .true.
 /
 
 &reinit_knobs
-    delt_adj = 2.0
-    delt_minimum = 0.0001
+ delt_adj = 2.0
+ delt_minimum = 1.e-4
 /
-
 &layouts_knobs
-    xyzs_layout = 'yxzs'
-    vms_layout = 'vms'
+ xyzs_layout = 'yxzs'
+ vms_layout = 'vms'
 /
 
 &neoclassical_input
-    include_neoclassical_terms = .false.
-    neo_option = 'sfincs'
+ include_neoclassical_terms = .false.
+ neo_option = 'sfincs'
 /
-
 &sfincs_input
-    nproc_sfincs = 2
-    nxi = 16
-    nx = 5
+ nproc_sfincs = 2
+ nxi = 16
+ nx = 5
 /

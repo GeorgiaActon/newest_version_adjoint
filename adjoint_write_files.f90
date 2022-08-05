@@ -89,7 +89,7 @@ contains
 
   subroutine write_final_time (istep_final)
 
-    use stella_time, only: code_dt
+!    use stella_time, only: code_dt
     use run_parameters, only: nstep
     
     implicit none
@@ -97,8 +97,8 @@ contains
     real, intent(in) :: istep_final
 
     open(16, file="adjoint_files/adjoint_final_time.dat", status="replace",action="write")
-    write(16,*) istep_final*code_dt
-    write(16,*)	nstep*code_dt
+    write(16,*) istep_final-1
+    write(16,*)	nstep
     close(16)
     
   end subroutine write_final_time
@@ -115,7 +115,8 @@ contains
     write(13,*) real(omega_g), aimag(omega_g)
     close(13)
 
-    call write_g_start (istep_final)
+    call write_g_start
+    call write_final_time (istep_final)
     
   end subroutine write_files_omega
   
