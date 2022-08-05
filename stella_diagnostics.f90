@@ -9,7 +9,7 @@ module stella_diagnostics
    public :: nsave
 
    public :: omega_vs_time, navg
-   
+
    private
 
    integer :: ntg_out
@@ -338,7 +338,7 @@ contains
             deallocate (phiavg, phioldavg)
          end if
       end if
-            
+
       !> only write data to file every nwrite time steps
       if (mod(istep, nwrite) /= 0) return
 

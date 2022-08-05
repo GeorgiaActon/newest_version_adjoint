@@ -128,8 +128,8 @@ contains
       real, dimension(:, :), allocatable :: gbdrift_alpha, cvdrift_alpha
       real, dimension(:, :), allocatable :: gbdrift0_psi, cvdrift0_psi
 
-      integer, optional, intent (in) :: adjoint_var
-      
+      integer, optional, intent(in) :: adjoint_var
+
       if (geoinit) return
       geoinit = .true.
 
@@ -147,7 +147,7 @@ contains
          select case (geo_option_switch)
          case (geo_option_local)
             ! read in Miller local parameters
-            if(present(adjoint_var)) then 
+            if (present(adjoint_var)) then
                call read_local_parameters(nzed, nzgrid, geo_surf, adjoint_var)
             else
                call read_local_parameters(nzed, nzgrid, geo_surf)
@@ -157,21 +157,21 @@ contains
             ! use Miller local parameters to get
             ! geometric coefficients needed by stella
             call get_local_geo(nzed, nzgrid, zed, zed_equal_arc, &
-               dpsidrho, dpsidrho_psi0, dIdrho, grho(1, :), &
-               bmag(1, :), bmag_psi0(1, :), &
-               gds2(1, :), gds21(1, :), gds22(1, :), &
-               gds23(1, :), gds24(1, :), gradpar, &
-               gbdrift0(1, :), gbdrift(1, :), cvdrift0(1, :), cvdrift(1, :), &
-               dBdrho, d2Bdrdth, dgradpardrho, btor, rmajor, &
-               dcvdrift0drho(1, :), dcvdriftdrho(1, :), &
-               dgbdrift0drho(1, :), dgbdriftdrho(1, :), &
-               dgds2dr(1, :), dgds21dr(1, :), &
-               dgds22dr(1, :), djacdrho(1, :))
+                               dpsidrho, dpsidrho_psi0, dIdrho, grho(1, :), &
+                               bmag(1, :), bmag_psi0(1, :), &
+                               gds2(1, :), gds21(1, :), gds22(1, :), &
+                               gds23(1, :), gds24(1, :), gradpar, &
+                               gbdrift0(1, :), gbdrift(1, :), cvdrift0(1, :), cvdrift(1, :), &
+                               dBdrho, d2Bdrdth, dgradpardrho, btor, rmajor, &
+                               dcvdrift0drho(1, :), dcvdriftdrho(1, :), &
+                               dgbdrift0drho(1, :), dgbdriftdrho(1, :), &
+                               dgds2dr(1, :), dgds21dr(1, :), &
+                               dgds22dr(1, :), djacdrho(1, :))
 
             !> b_dot_grad_z is the alpha-dependent b . grad z,
             !> and gradpar is the constant-in-alpha part of it.
             !> for axisymmetric systems, b_dot_grad_z is independent of alpha.
-            
+
             b_dot_grad_z(1, :) = gradpar
             ! note that psi here is the enclosed poloidal flux divided by 2pi
             drhodpsi = 1./dpsidrho
@@ -202,12 +202,12 @@ contains
             zeta(1, :) = zed * geo_surf%qinp
          case (geo_option_multibox)
             ! read in Miller local parameters
-            if(present(adjoint_var)) then
+            if (present(adjoint_var)) then
                call read_local_parameters(nzed, nzgrid, geo_surf, adjoint_var)
             else
                call read_local_parameters(nzed, nzgrid, geo_surf)
             end if
-            
+
             ! allocate geometry arrays
             call allocate_arrays(nalpha, nzgrid)
 
@@ -216,16 +216,16 @@ contains
             ! use Miller local parameters to get
             ! geometric coefficients needed by stella
             call get_local_geo(nzed, nzgrid, zed, zed_equal_arc, &
-               dpsidrho, dpsidrho_psi0, dIdrho, grho(1, :), &
-               bmag(1, :), bmag_psi0(1, :), &
-               gds2(1, :), gds21(1, :), gds22(1, :), &
-               gds23(1, :), gds24(1, :), gradpar, &
-               gbdrift0(1, :), gbdrift(1, :), cvdrift0(1, :), cvdrift(1, :), &
-               dBdrho, d2Bdrdth, dgradpardrho, btor, rmajor, &
-               dcvdrift0drho(1, :), dcvdriftdrho(1, :), &
-               dgbdrift0drho(1, :), dgbdriftdrho(1, :), &
-               dgds2dr(1, :), dgds21dr(1, :), &
-               dgds22dr(1, :), djacdrho(1, :))
+                               dpsidrho, dpsidrho_psi0, dIdrho, grho(1, :), &
+                               bmag(1, :), bmag_psi0(1, :), &
+                               gds2(1, :), gds21(1, :), gds22(1, :), &
+                               gds23(1, :), gds24(1, :), gradpar, &
+                               gbdrift0(1, :), gbdrift(1, :), cvdrift0(1, :), cvdrift(1, :), &
+                               dBdrho, d2Bdrdth, dgradpardrho, btor, rmajor, &
+                               dcvdrift0drho(1, :), dcvdriftdrho(1, :), &
+                               dgbdrift0drho(1, :), dgbdriftdrho(1, :), &
+                               dgds2dr(1, :), dgds21dr(1, :), &
+                               dgds22dr(1, :), djacdrho(1, :))
             !> b_dot_grad_z is the alpha-dependent b . grad z,
             !> and gradpar is the constant-in-alpha part of it.
             !> for axisymmetric systems, b_dot_grad_z is independent of alpha.
@@ -261,7 +261,7 @@ contains
          case (geo_option_inputprof)
             ! first read in some local parameters
             ! only thing needed really is rhoc
-            if(present(adjoint_var)) then
+            if (present(adjoint_var)) then
                call read_local_parameters(nzed, nzgrid, geo_surf, adjoint_var)
             else
                call read_local_parameters(nzed, nzgrid, geo_surf)
@@ -273,17 +273,17 @@ contains
             ! use rhoc from input as surface
             call read_inputprof_geo(geo_surf)
             call get_local_geo(nzed, nzgrid, zed, zed_equal_arc, &
-               dpsidrho, dpsidrho_psi0, dIdrho, grho(1, :), &
-               bmag(1, :), bmag_psi0(1, :), &
-               gds2(1, :), gds21(1, :), gds22(1, :), &
-               gds23(1, :), gds24(1, :), gradpar, &
-               gbdrift0(1, :), gbdrift(1, :), cvdrift0(1, :), cvdrift(1, :), &
-               dBdrho, d2Bdrdth, dgradpardrho, btor, rmajor, &
-               dcvdrift0drho(1, :), dcvdriftdrho(1, :), &
-               dgbdrift0drho(1, :), dgbdriftdrho(1, :), &
-               dgds2dr(1, :), dgds21dr(1, :), &
-               dgds22dr(1, :), djacdrho(1, :))
-            
+                               dpsidrho, dpsidrho_psi0, dIdrho, grho(1, :), &
+                               bmag(1, :), bmag_psi0(1, :), &
+                               gds2(1, :), gds21(1, :), gds22(1, :), &
+                               gds23(1, :), gds24(1, :), gradpar, &
+                               gbdrift0(1, :), gbdrift(1, :), cvdrift0(1, :), cvdrift(1, :), &
+                               dBdrho, d2Bdrdth, dgradpardrho, btor, rmajor, &
+                               dcvdrift0drho(1, :), dcvdriftdrho(1, :), &
+                               dgbdrift0drho(1, :), dgbdriftdrho(1, :), &
+                               dgds2dr(1, :), dgds21dr(1, :), &
+                               dgds22dr(1, :), djacdrho(1, :))
+
             !> b_dot_grad_z is the alpha-dependent b . grad z,
             !> and gradpar is the constant-in-alpha part of it.
             !> for axisymmetric systems, b_dot_grad_z is independent of alpha.

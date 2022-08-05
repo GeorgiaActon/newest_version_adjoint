@@ -6,7 +6,7 @@ module time_advance
    public :: checksum
 
    public :: get_dgdy, get_dgdx
-   
+
    private
 
    interface get_dgdy
@@ -65,7 +65,7 @@ module time_advance
 
    logical :: debug = .false.
 
-   logical :: init_cfl_header = .True. 
+   logical :: init_cfl_header = .True.
 contains
 
    subroutine init_time_advance
@@ -401,8 +401,8 @@ contains
          allocate (wstar(nalpha, -nzgrid:nzgrid, vmu_lo%llim_proc:vmu_lo%ulim_alloc)); wstar = 0.0
 
       if (.not. allocated(star_ad_field)) &
-           allocate (star_ad_field(nalpha, -nzgrid:nzgrid, vmu_lo%llim_proc:vmu_lo%ulim_alloc)); star_ad_field = 0.0
-      
+         allocate (star_ad_field(nalpha, -nzgrid:nzgrid, vmu_lo%llim_proc:vmu_lo%ulim_alloc)); star_ad_field = 0.0
+
       allocate (energy(nalpha, -nzgrid:nzgrid))
 
       do ivmu = vmu_lo%llim_proc, vmu_lo%ulim_proc
@@ -424,10 +424,10 @@ contains
 !               * maxwell_vpa(iv,is)*maxwell_mu(:,:,imu,is)*maxwell_fac(is) &
 !               * (spec(is)%fprim+spec(is)%tprim*(energy-1.5))
             wstar(:, :, ivmu) = dydalpha * drhodpsi * wstarknob * 0.5 * code_dt &
-                 * (spec(is)%fprim + spec(is)%tprim * (energy - 1.5))
+                                * (spec(is)%fprim + spec(is)%tprim * (energy - 1.5))
          end if
-         star_ad_field(:,:,ivmu) = - dydalpha * drhodpsi * wstarknob * 0.5 &
-              * (spec(is)%fprim + spec(is)%tprim * (energy - 1.5))       
+         star_ad_field(:, :, ivmu) = -dydalpha * drhodpsi * wstarknob * 0.5 &
+                                     * (spec(is)%fprim + spec(is)%tprim * (energy - 1.5))
          if (.not. full_flux_surface) then
             wstar(:, :, ivmu) = wstar(:, :, ivmu) * maxwell_vpa(iv, is) * maxwell_mu(:, :, imu, is) * maxwell_fac(is)
          end if
@@ -860,7 +860,7 @@ contains
       call min_allreduce(cfl_dt)
       if (runtype_option_switch == runtype_multibox) call scope(subprocs)
 
-      if(init_cfl_header) then
+      if (init_cfl_header) then
          if (proc0) then
             write (*, '(A)') "############################################################"
             write (*, '(A)') "                        CFL CONDITION"
@@ -874,7 +874,7 @@ contains
          end if
          init_cfl_header = .False.
       end if
-         
+
       if (abs(code_dt) > cfl_dt * cfl_cushion) then
          if (proc0) then
             write (*, *) 'CHANGING TIME STEP:'
@@ -890,7 +890,6 @@ contains
          call write_dt
          write (*, *)
       end if
-         
 
    end subroutine init_cfl
 
@@ -973,12 +972,12 @@ contains
       use sources, only: remove_zero_projection, project_out_zero
 
       use adjoint_distfn_arrays, only: g_omega, g_omega2
-      
+
       implicit none
 
       integer, intent(in) :: istep
-      logical, optional, intent (in) :: adjoint
-      
+      logical, optional, intent(in) :: adjoint
+
       !> unless running in multibox mode, no need to worry about
       !> mb_communicate calls as the subroutine is immediately exited
       !> if not in multibox mode.
@@ -994,7 +993,7 @@ contains
       !> reverse the order of operations every time step
       !> as part of alternating direction operator splitting
       !> this is needed to ensure 2nd order accuracy in time
-      if(present(adjoint)) then
+      if (present(adjoint)) then
          if (mod(istep, 2) == 1 .or. .not. flip_flop) then
             if (debug) write (*, *) 'time_advance adjoint::advance_explicit'
             call advance_explicit(gnew, adjoint)
@@ -1002,9 +1001,9 @@ contains
             if (.not. fully_explicit) call advance_implicit(istep, phi, apar, gnew, adjoint)
          else
             if (debug) write (*, *) 'time_advance adjoint::advance_implicit'
-            if (.not.fully_explicit) call advance_implicit (istep, phi, apar, gnew, adjoint)
+            if (.not. fully_explicit) call advance_implicit(istep, phi, apar, gnew, adjoint)
             if (debug) write (*, *) 'time_advance adjoint::advance_explicit'
-            call advance_explicit (gnew, adjoint)
+            call advance_explicit(gnew, adjoint)
          end if
       else
          !! Normal Stells
@@ -1030,14 +1029,14 @@ contains
          fields_updated = .false.
       end if
 
-      if(present(adjoint)) then
+      if (present(adjoint)) then
          g_omega2 = g_omega
          g_omega = gold
       end if
       gold = gnew
 
       !> Ensure fields are updated so that omega calculation is correct.
-      if(present(adjoint)) then
+      if (present(adjoint)) then
          call advance_fields(gnew, phi, apar, dist='gbar', adjoint=adjoint)
       else
          call advance_fields(gnew, phi, apar, dist='gbar')
@@ -1070,8 +1069,8 @@ contains
 
       integer :: ivmu, iv, sgn, iky
 
-      logical, optional, intent (in) :: adjoint
-      
+      logical, optional, intent(in) :: adjoint
+
       !> start the timer for the explicit part of the solve
       if (proc0) call time_message(.false., time_gke(:, 8), ' explicit')
 
@@ -1079,21 +1078,21 @@ contains
       case (explicit_option_rk2)
          !> SSP RK2
          if (present(adjoint)) then
-            call advance_explicit_rk2 (g, adjoint)
+            call advance_explicit_rk2(g, adjoint)
          else
             call advance_explicit_rk2(g)
          end if
       case (explicit_option_rk3)
          !> default is SSP RK3
          if (present(adjoint)) then
-             call advance_explicit_rk3 (g, adjoint)
-          else
-             call advance_explicit_rk3(g)
-          end if
+            call advance_explicit_rk3(g, adjoint)
+         else
+            call advance_explicit_rk3(g)
+         end if
       case (explicit_option_rk4)
          !> RK4
          if (present(adjoint)) then
-            call advance_explicit_rk4 (g, adjoint)
+            call advance_explicit_rk4(g, adjoint)
          else
             call advance_explicit_rk4(g)
          end if
@@ -1132,7 +1131,7 @@ contains
       integer :: icnt
       logical :: restart_time_step
 
-      logical, optional, intent (in) :: adjoint
+      logical, optional, intent(in) :: adjoint
 
       !> if CFL condition is violated by nonlinear term
       !> then must modify time step size and restart time step
@@ -1152,15 +1151,15 @@ contains
          select case (icnt)
          case (1)
             if (present(adjoint)) then
-                call solve_adjoint (g0, g1, restart_time_step)
-             else
-                call solve_gke(g0, g1, restart_time_step)
-             end if
+               call solve_adjoint(g0, g1, restart_time_step)
+            else
+               call solve_gke(g0, g1, restart_time_step)
+            end if
          case (2)
             g1 = g0 + g1
             if (RK_step) call mb_communicate(g1)
             if (present(adjoint)) then
-               call solve_adjoint (g1, g, restart_time_step)
+               call solve_adjoint(g1, g, restart_time_step)
             else
                call solve_gke(g1, g, restart_time_step)
             end if
@@ -1192,7 +1191,7 @@ contains
       integer :: icnt
       logical :: restart_time_step
 
-      logical, optional, intent (in) :: adjoint
+      logical, optional, intent(in) :: adjoint
 
       !> if CFL condition is violated by nonlinear term
       !> then must modify time step size and restart time step
@@ -1212,7 +1211,7 @@ contains
          select case (icnt)
          case (1)
             if (present(adjoint)) then
-               call solve_adjoint (g0, g1, restart_time_step)
+               call solve_adjoint(g0, g1, restart_time_step)
             else
                call solve_gke(g0, g1, restart_time_step)
             end if
@@ -1220,7 +1219,7 @@ contains
             g1 = g0 + g1
             if (RK_step) call mb_communicate(g1)
             if (present(adjoint)) then
-               call solve_adjoint (g1, g2, restart_time_step)
+               call solve_adjoint(g1, g2, restart_time_step)
             else
                call solve_gke(g1, g2, restart_time_step)
             end if
@@ -1228,7 +1227,7 @@ contains
             g2 = g1 + g2
             if (RK_step) call mb_communicate(g2)
             if (present(adjoint)) then
-               call solve_adjoint (g2, g, restart_time_step)
+               call solve_adjoint(g2, g, restart_time_step)
             else
                call solve_gke(g2, g, restart_time_step)
             end if
@@ -1260,8 +1259,8 @@ contains
       integer :: icnt
       logical :: restart_time_step
 
-      logical, optional, intent (in) :: adjoint
-      
+      logical, optional, intent(in) :: adjoint
+
       !> if CFL condition is violated by nonlinear term
       !> then must modify time step size and restart time step
       !> assume false and test
@@ -1280,7 +1279,7 @@ contains
          select case (icnt)
          case (1)
             if (present(adjoint)) then
-               call solve_adjoint (g0, g1, restart_time_step)
+               call solve_adjoint(g0, g1, restart_time_step)
             else
                call solve_gke(g0, g1, restart_time_step)
             end if
@@ -1289,7 +1288,7 @@ contains
             g3 = g0 + 0.5 * g1
             if (RK_step) call mb_communicate(g3)
             if (present(adjoint)) then
-               call solve_adjoint (g3, g2, restart_time_step)
+               call solve_adjoint(g3, g2, restart_time_step)
             else
                call solve_gke(g3, g2, restart_time_step)
             end if
@@ -1299,7 +1298,7 @@ contains
             g2 = g0 + 0.5 * g2
             if (RK_step) call mb_communicate(g2)
             if (present(adjoint)) then
-               call solve_adjoint (g2, g3, restart_time_step)
+               call solve_adjoint(g2, g3, restart_time_step)
             else
                call solve_gke(g2, g3, restart_time_step)
             end if
@@ -1309,7 +1308,7 @@ contains
             g3 = g0 + g3
             if (RK_step) call mb_communicate(g3)
             if (present(adjoint)) then
-               call solve_adjoint (g3, g, restart_time_step)
+               call solve_adjoint(g3, g, restart_time_step)
             else
                call solve_gke(g3, g, restart_time_step)
             end if
@@ -1471,116 +1470,115 @@ contains
 
    end subroutine solve_gke
 
-
    !! Adjoint - Advance adjoint
-   subroutine solve_adjoint (gin, rhs, restart_time_step)
-     
-     use stella_layouts, only: vmu_lo
-     use zgrid, only: nzgrid
-     
-     use mirror_terms, only: advance_mirror_explicit
-     use physics_flags, only: include_mirror
-     use run_parameters, only: mirror_implicit
-     use fields_arrays, only: phi
-     
-     use kt_grids, only: naky,nakx
-     implicit none
-     
-     complex, dimension (:,:,-nzgrid:,:,vmu_lo%llim_proc:), intent (in) :: gin
-     complex, dimension (:,:,-nzgrid:,:,vmu_lo%llim_proc:), intent (out) :: rhs
+   subroutine solve_adjoint(gin, rhs, restart_time_step)
 
-     logical, intent (out) :: restart_time_step
+      use stella_layouts, only: vmu_lo
+      use zgrid, only: nzgrid
 
-     logical :: adjoint = .True.
+      use mirror_terms, only: advance_mirror_explicit
+      use physics_flags, only: include_mirror
+      use run_parameters, only: mirror_implicit
+      use fields_arrays, only: phi
 
-     rhs = 0.
-     restart_time_step = .false.
+      use kt_grids, only: naky, nakx
+      implicit none
 
-     !! Adjoint - Advance mirror, wdrift terms, wstar terms, omega term                                                                                               
-     !!           and field terms explicitly (in Runge Kutta)                                                                                                         
-     if (.not.restart_time_step) then
-        if(include_mirror .and. mirror_implicit) call advance_mirror_explicit (gin, rhs)
-        !! Adjoint - For wdrift terms we pass a logical such that for the adjoint equation only                                                                       
-        !!           wdrift_g terms are included                                                                                                          
-        phi = 0.0
-        call advance_wdrifty_explicit (gin, phi, rhs, adjoint)
-        call advance_wdriftx_explicit (gin, phi, rhs, adjoint)
-        call add_omega_term (gin, rhs)
-        call add_adjoint_field (gin, rhs)
-     end if
+      complex, dimension(:, :, -nzgrid:, :, vmu_lo%llim_proc:), intent(in) :: gin
+      complex, dimension(:, :, -nzgrid:, :, vmu_lo%llim_proc:), intent(out) :: rhs
+
+      logical, intent(out) :: restart_time_step
+
+      logical :: adjoint = .True.
+
+      rhs = 0.
+      restart_time_step = .false.
+
+     !! Adjoint - Advance mirror, wdrift terms, wstar terms, omega term
+     !!           and field terms explicitly (in Runge Kutta)
+      if (.not. restart_time_step) then
+         if (include_mirror .and. mirror_implicit) call advance_mirror_explicit(gin, rhs)
+        !! Adjoint - For wdrift terms we pass a logical such that for the adjoint equation only
+        !!           wdrift_g terms are included
+         phi = 0.0
+         call advance_wdrifty_explicit(gin, phi, rhs, adjoint)
+         call advance_wdriftx_explicit(gin, phi, rhs, adjoint)
+         call add_omega_term(gin, rhs)
+         call add_adjoint_field(gin, rhs)
+      end if
    end subroutine solve_adjoint
 
-   subroutine add_omega_term (gin, src)
-     
-     use stella_layouts, only: vmu_lo
-     use zgrid, only: nzgrid, ntubes, nztot
-     use stella_time, only: code_dt
-     use adjoint_field_arrays, only: omega_g
+   subroutine add_omega_term(gin, src)
 
-     implicit none
+      use stella_layouts, only: vmu_lo
+      use zgrid, only: nzgrid, ntubes, nztot
+      use stella_time, only: code_dt
+      use adjoint_field_arrays, only: omega_g
 
-     complex, dimension (:,:,-nzgrid:,:,vmu_lo%llim_proc:), intent (in) :: gin
-     complex, dimension (:,:,-nzgrid:,:,vmu_lo%llim_proc:), intent (in out) :: src
-     
-     integer :: ivmu
+      implicit none
 
-     do ivmu = vmu_lo%llim_proc, vmu_lo%ulim_proc
-        src(:,:,:,:,ivmu) = src(:,:,:,:,ivmu) &
-             - spread(spread(conjg(omega_g), 3, nztot),4, ntubes)*gin(:,:,:,:,ivmu)*code_dt
-     end do
+      complex, dimension(:, :, -nzgrid:, :, vmu_lo%llim_proc:), intent(in) :: gin
+      complex, dimension(:, :, -nzgrid:, :, vmu_lo%llim_proc:), intent(in out) :: src
+
+      integer :: ivmu
+
+      do ivmu = vmu_lo%llim_proc, vmu_lo%ulim_proc
+         src(:, :, :, :, ivmu) = src(:, :, :, :, ivmu) &
+                                 - spread(spread(conjg(omega_g), 3, nztot), 4, ntubes) * gin(:, :, :, :, ivmu) * code_dt
+      end do
 
    end subroutine add_omega_term
 
-   subroutine add_adjoint_field (gin, src)
+   subroutine add_adjoint_field(gin, src)
 
-     use stella_layouts, only: vmu_lo
-     use stella_layouts, only: is_idx, iv_idx, imu_idx
-     use zgrid, only: nzgrid, ntubes
-     use kt_grids, only: nakx, naky
-     use gyro_averages, only: gyro_average
-     use stella_time, only: code_dt
-     use species, only: spec
-     use fields_arrays, only: apar, phi
-     use fields, only: advance_fields, fields_updated
-     use vpamu_grids, only: maxwell_mu, maxwell_vpa, maxwell_fac
-     
-     implicit none
+      use stella_layouts, only: vmu_lo
+      use stella_layouts, only: is_idx, iv_idx, imu_idx
+      use zgrid, only: nzgrid, ntubes
+      use kt_grids, only: nakx, naky
+      use gyro_averages, only: gyro_average
+      use stella_time, only: code_dt
+      use species, only: spec
+      use fields_arrays, only: apar, phi
+      use fields, only: advance_fields, fields_updated
+      use vpamu_grids, only: maxwell_mu, maxwell_vpa, maxwell_fac
 
-     complex, dimension (:,:,-nzgrid:,:,vmu_lo%llim_proc:), intent (in) :: gin
-     complex, dimension (:,:,-nzgrid:,:,vmu_lo%llim_proc:), intent (in out) :: src
+      implicit none
 
-     complex, dimension (:,:,:,:,:), allocatable :: gyro_phi
-     integer :: ivmu, is, iv,imu
-     logical :: adjoint  = .True.
+      complex, dimension(:, :, -nzgrid:, :, vmu_lo%llim_proc:), intent(in) :: gin
+      complex, dimension(:, :, -nzgrid:, :, vmu_lo%llim_proc:), intent(in out) :: src
 
-     allocate(gyro_phi(naky,nakx,-nzgrid:nzgrid,ntubes,vmu_lo%llim_proc:vmu_lo%ulim_alloc))
-     gyro_phi = 0.0
-     gyro_phi = gin
-     
-     phi = 0.0
-     fields_updated = .false.
-     call advance_fields (gyro_phi, phi, apar, dist='gbar', adjoint=adjoint)
-     apar = 0.
-     
-     gyro_phi = 0.0
-     do ivmu = vmu_lo%llim_proc, vmu_lo%ulim_proc
-        imu = imu_idx(vmu_lo,ivmu)
-        iv = iv_idx(vmu_lo,ivmu)
-        is = is_idx(vmu_lo,ivmu)
-        call gyro_average (phi, ivmu, gyro_phi(:,:,:,:,ivmu))
-        src(:,:,:,:,ivmu) = src(:,:,:,:,ivmu) - spec(is)%z*spec(is)%dens_psi0*gyro_phi(:,:,:,:,ivmu)*code_dt!* !&
+      complex, dimension(:, :, :, :, :), allocatable :: gyro_phi
+      integer :: ivmu, is, iv, imu
+      logical :: adjoint = .True.
+
+      allocate (gyro_phi(naky, nakx, -nzgrid:nzgrid, ntubes, vmu_lo%llim_proc:vmu_lo%ulim_alloc))
+      gyro_phi = 0.0
+      gyro_phi = gin
+
+      phi = 0.0
+      fields_updated = .false.
+      call advance_fields(gyro_phi, phi, apar, dist='gbar', adjoint=adjoint)
+      apar = 0.
+
+      gyro_phi = 0.0
+      do ivmu = vmu_lo%llim_proc, vmu_lo%ulim_proc
+         imu = imu_idx(vmu_lo, ivmu)
+         iv = iv_idx(vmu_lo, ivmu)
+         is = is_idx(vmu_lo, ivmu)
+         call gyro_average(phi, ivmu, gyro_phi(:, :, :, :, ivmu))
+         src(:, :, :, :, ivmu) = src(:, :, :, :, ivmu) - spec(is)%z * spec(is)%dens_psi0 * gyro_phi(:, :, :, :, ivmu) * code_dt!* !&
 !             maxwell_vpa(iv,is)*maxwell_fac(is)!*&
 !             spread(spread(spread(maxwell_mu(1,:,imu,is), 1, naky), 2, nakx), 4,ntubes)
-     end do
+      end do
 
-     deallocate(gyro_phi)
+      deallocate (gyro_phi)
 
    end subroutine add_adjoint_field
 
    !! Adjoint - End Advance Adjoint
-     
+
    subroutine advance_wstar_explicit(phi, gout)
-       
+
       use mp, only: proc0, mp_abort
       use job_manage, only: time_message
       use fields, only: get_dchidy
@@ -1668,8 +1666,8 @@ contains
       complex, dimension(:, :, :, :, :), allocatable :: g0k, g0y
       complex, dimension(:, :), allocatable :: g0k_swap
 
-      logical, optional, intent (in) :: adjoint
-      
+      logical, optional, intent(in) :: adjoint
+
       !> start the timing of the y component of the magnetic drift advance
       if (proc0) call time_message(.false., time_gke(:, 4), ' dgdy advance')
 
@@ -1679,11 +1677,11 @@ contains
       if (debug) write (*, *) 'time_advance::advance_stella::advance_explicit::solve_gke::advance_wdrifty_explicit::get_dgdy'
       !> calculate dg/dy in (ky,kx) space
       call get_dgdy(g, g0k)
-      
-      if(present(adjoint)) then
+
+      if (present(adjoint)) then
          g0k = -g0k
       end if
-      
+
       !> calculate dphi/dy in (ky,kx) space
       if (.not. present(adjoint)) call get_dgdy(phi, dphidy)
 
@@ -1703,9 +1701,9 @@ contains
          call add_explicit_term_ffs(g0y, wdrifty_g, gout)
 
          !> get <dphi/dy> in k-space
-          !! Adjoint - do not include phi term in adjoint equation                                                                                                     
+          !! Adjoint - do not include phi term in adjoint equation
          if (.not. present(adjoint)) then
-            
+
             do ivmu = vmu_lo%llim_proc, vmu_lo%ulim_proc
                call gyro_average(dphidy, ivmu, g0k(:, :, :, :, ivmu))
             end do
@@ -1717,7 +1715,7 @@ contains
                   call transform_ky2y(g0k_swap, g0y(:, :, iz, it, ivmu))
                end do
             end do
-            
+
             !> add vM . grad y d<phi>/dy term to equation
             call add_explicit_term_ffs(g0y, wdrifty_phi, gout)
          end if
@@ -1728,12 +1726,12 @@ contains
          call add_explicit_term(g0k, wdrifty_g(1, :, :), gout)
 
          ! get <dphi/dy> in k-space
-         !! Adjoint - do not unclude phi term in adjoint equation                                                                                                     
+         !! Adjoint - do not unclude phi term in adjoint equation
          if (.not. present(adjoint)) then
             do ivmu = vmu_lo%llim_proc, vmu_lo%ulim_proc
                call gyro_average(dphidy, ivmu, g0k(:, :, :, :, ivmu))
             end do
-            
+
             ! add vM . grad y d<phi>/dy term to equation
             call add_explicit_term(g0k, wdrifty_phi(1, :, :), gout)
          end if
@@ -1771,7 +1769,7 @@ contains
       complex, dimension(:, :, :, :, :), allocatable :: g0k, g0y
       complex, dimension(:, :), allocatable :: g0k_swap
 
-      logical, optional, intent (in) :: adjoint
+      logical, optional, intent(in) :: adjoint
 
       !> start the timing of the x component of the magnetic drift advance
       if (proc0) call time_message(.false., time_gke(:, 5), ' dgdx advance')
@@ -1788,13 +1786,13 @@ contains
       if (debug) write (*, *) 'time_advance::solve_gke::get_dgdx'
       !> calculate dg/dx in (ky,kx) space
       call get_dgdx(g, g0k)
-      
-      if(present(adjoint)) then
+
+      if (present(adjoint)) then
          g0k = -g0k
       end if
-      
+
       !> calculate dphi/dx in (ky,kx) space
-      if(.not. present(adjoint)) call get_dgdx(phi, dphidx)
+      if (.not. present(adjoint)) call get_dgdx(phi, dphidx)
 
       if (full_flux_surface) then
          !> assume a single flux surface is simulated
@@ -1811,7 +1809,7 @@ contains
          !> add vM . grad x dg/dx term to equation
          call add_explicit_term_ffs(g0y, wdriftx_g, gout)
          !> get <dphi/dx> in k-space
-         !! Adjoint - do not include phi term in adjoint equation                                                                                                     
+         !! Adjoint - do not include phi term in adjoint equation
          if (.not. present(adjoint)) then
             do ivmu = vmu_lo%llim_proc, vmu_lo%ulim_proc
                call gyro_average(dphidx, ivmu, g0k(:, :, :, :, ivmu))
@@ -1832,7 +1830,7 @@ contains
          !> add vM . grad x dg/dx term to equation
          call add_explicit_term(g0k, wdriftx_g(1, :, :), gout)
          !> get <dphi/dx> in k-space
-         !! Adjoint - do not include phi term in adjoint equation                                                                                                     
+         !! Adjoint - do not include phi term in adjoint equation
          if (.not. present(adjoint)) then
             do ivmu = vmu_lo%llim_proc, vmu_lo%ulim_proc
                call gyro_average(dphidx, ivmu, g0k(:, :, :, :, ivmu))
@@ -2801,7 +2799,7 @@ contains
       complex, dimension(:, :, -nzgrid:, :), intent(in out) :: phi, apar
       complex, dimension(:, :, -nzgrid:, :, vmu_lo%llim_proc:), intent(in out) :: g
 
-      logical, optional, intent (in) :: adjoint 
+      logical, optional, intent(in) :: adjoint
 !    complex, dimension (:,:,-nzgrid:,:,vmu_lo%llim_proc:), intent (in out), target :: g
 
 !    complex, dimension (:,:,:,:,:), pointer :: gk, gy
@@ -2873,21 +2871,21 @@ contains
 
          ! g^{**} is input
          ! get g^{***}, with g^{***}-g^{**} due to parallel streaming term
-         !! Adjoint - parallel streaming is treated implicitly in adjoint equation                                                                                    
+         !! Adjoint - parallel streaming is treated implicitly in adjoint equation
          if (present(adjoint)) then
             phi = 0.
             apar = 0.
-            if(include_parallel_streaming) &
-                 call advance_parallel_streaming_implicit (g, phi, apar, adjoint)
+            if (include_parallel_streaming) &
+               call advance_parallel_streaming_implicit(g, phi, apar, adjoint)
 
             fields_updated = .false.
-            call advance_fields(g, phi, apar, dist='gbar', adjoint = adjoint)
+            call advance_fields(g, phi, apar, dist='gbar', adjoint=adjoint)
          else
             if ((stream_implicit .or. driftkinetic_implicit) .and. include_parallel_streaming) then
                call advance_parallel_streaming_implicit(g, phi, apar)
                if (radial_variation .or. full_flux_surface) fields_updated = .false.
             end if
-            fields_updated = .false. 
+            fields_updated = .false.
             call advance_fields(g, phi, apar, dist='gbar')
          end if
          if (drifts_implicit) call advance_drifts_implicit(g, phi, apar)
@@ -2902,14 +2900,14 @@ contains
 
          ! g^{**} is input
          ! get g^{***}, with g^{***}-g^{**} due to parallel streaming term
-         !! Adjoint - parallel streaming is treated implicitly in adjoint equation                                                                                    
+         !! Adjoint - parallel streaming is treated implicitly in adjoint equation
          if (present(adjoint)) then
             phi = 0.
             apar = 0.
-            if(include_parallel_streaming) &
-                 call advance_parallel_streaming_implicit (g, phi, apar, adjoint)
+            if (include_parallel_streaming) &
+               call advance_parallel_streaming_implicit(g, phi, apar, adjoint)
             fields_updated = .false.
-            call advance_fields(g, phi, apar, dist='gbar', adjoint = adjoint)
+            call advance_fields(g, phi, apar, dist='gbar', adjoint=adjoint)
          else
             if ((stream_implicit .or. driftkinetic_implicit) .and. include_parallel_streaming) then
                call advance_parallel_streaming_implicit(g, phi, apar)
@@ -3252,8 +3250,8 @@ contains
       if (allocated(wstar)) deallocate (wstar)
       if (allocated(wstarp)) deallocate (wstarp)
 
-      if(allocated(star_ad_field)) deallocate(star_ad_field)
-      
+      if (allocated(star_ad_field)) deallocate (star_ad_field)
+
       wstarinit = .false.
 
    end subroutine finish_wstar
