@@ -23,7 +23,7 @@ program stella
    use zgrid, only: nzgrid, ntubes
    use kt_grids, only: naky, nakx
    use stella_diagnostics, only: navg
-   
+
    use adjoint_convergence, only: omega_convergence1, omega_convergence2
    use adjoint_field_arrays, only: omega_g
    use stella_diagnostics, only: omega_vs_time
@@ -89,7 +89,7 @@ program stella
       call diagnose_stella(istep)
       call time_message(.false., time_diagnostics, ' diagnostics')
       !! Adjoint convergence test
-      ! if (adjoint) then 
+      ! if (adjoint) then
       !    if (do_average) then
       !       call omega_convergence1 (istep, converged)
       !       if (converged) then
@@ -105,7 +105,7 @@ program stella
       call flush_output_file(ierr)
       istep = istep + 1
    end do
-   
+
    istep_final = istep
 
 !   omega_g = -zi*sum(omega_vs_time,dim=1)/real(navg)
@@ -171,9 +171,9 @@ contains
       complex(8), dimension(:, :), allocatable :: lag_out
 
       logical :: new_file
-      
-      integer, dimension(11) :: loop_var = [1,2,3,4,5,6,7,8,9,10,11]
-      integer :: j 
+
+      integer, dimension(11) :: loop_var = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+      integer :: j
 
       call init_stella(istep0, get_git_version(), get_git_date(), adjoint_var=0)
       new_file = .true.
@@ -188,7 +188,7 @@ contains
       fields_updated = .false.
       call advance_fields(gnew, phi, apar, dist='gbar', adjoint=adjoint)
 
-      if(proc0) then       
+      if (proc0) then
          write (*, '(A)') "*************************** "
          write (*, '(A)') "**** starting adjoint ***** "
          write (*, '(A)') "*************************** "
@@ -246,12 +246,12 @@ contains
          !! Adjoint - init stella with perturbed geometric quantities
          !!         - read_local_parameters in miller_local need to be change
          !!         - want to keep integration varibles constant though (i.e. mu, vpa, zed)
-         
+
          !!TODO - creat a list of which variables correspond tp which adjoint variables and print out string
-         if(proc0) write (*, *) 'perturb adjoint_variable =', adjoint_var
+         if (proc0) write (*, *) 'perturb adjoint_variable =', adjoint_var
          if (debug) write (*, *) 'Adjoint_stella::init stella for change_p = ', adjoint_var
          call init_stella(istep0, get_git_version(), get_git_date(), adjoint_var)
-         
+
          !! Adjoint - Calculate d_p(gamma) for each p
          if (debug) write (*, *) 'Adjoint_stella::calculate derivatives'
          call perturb_p(g_store, q_store)
@@ -262,7 +262,7 @@ contains
          lag_out = 0.0
          call lagrangian_integrals(g_store, q_store, lag_out)
          derivative = -lag_out / (denominator)
-         write(*,*) 'derivative =', derivative 
+         write (*, *) 'derivative =', derivative
          call write_files_derivative(adjoint_var, derivative, new_file)
          new_file = .false.
 
