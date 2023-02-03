@@ -2,6 +2,7 @@
 # Auto-generated file by fortdep. Do not edit!
 #
 stella_mod = \
+	 adjoint_convergence.o \
 	 adjoint_distfn_arrays.o \
 	 adjoint_field_arrays.o \
 	 adjoint_p_derivatives.o \
@@ -76,6 +77,13 @@ test_vmec_to_stella_geometry_interface_mod = \
 	 test_vmec_to_stella_geometry_interface.o \
 	 vmec_to_stella_geometry_interface.o 
 
+adjoint_convergence.o: \
+	 adjoint_field_arrays.o \
+	 kt_grids.o \
+	 stella_diagnostics.o \
+	 stella_layouts.o \
+	 stella_time.o \
+	 zgrid.o 
 adjoint_distfn_arrays.o: 
 adjoint_field_arrays.o: 
 adjoint_p_derivatives.o: \
@@ -103,6 +111,7 @@ adjoint_p_derivatives.o: \
 	 vpamu_grids.o \
 	 zgrid.o 
 adjoint_run.o: \
+	 adjoint_convergence.o \
 	 adjoint_distfn_arrays.o \
 	 adjoint_field_arrays.o \
 	 adjoint_p_derivatives.o \
@@ -112,6 +121,7 @@ adjoint_run.o: \
 	 fields.o \
 	 fields_arrays.o \
 	 kt_grids.o \
+	 mp.o \
 	 redistribute.o \
 	 stella_diagnostics.o \
 	 stella_geometry.o \
@@ -121,7 +131,15 @@ adjoint_run.o: \
 	 zgrid.o 
 adjoint_write_files.o: \
 	 adjoint_field_arrays.o \
-	 stella_geometry.o 
+	 dist_fn_arrays.o \
+	 kt_grids.o \
+	 mp.o \
+	 run_parameters.o \
+	 species.o \
+	 stella_geometry.o \
+	 volume_averages.o \
+	 vpamu_grids.o \
+	 zgrid.o 
 command_line.o: 
 common_types.o: 
 constants.o: 
@@ -476,6 +494,7 @@ spfunc.o: \
 spl.o: \
 	 constants.o 
 stella.o: \
+	 adjoint_convergence.o \
 	 adjoint_distfn_arrays.o \
 	 adjoint_field_arrays.o \
 	 adjoint_p_derivatives.o \

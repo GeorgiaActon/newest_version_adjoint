@@ -10,6 +10,6 @@ module adjoint_field_arrays
    complex, dimension(:, :), allocatable :: omega_g, omega
 
    complex, dimension(:, :, :, :), allocatable :: q_unpert
-   complex, dimension(:, :, :, :, :), allocatable :: q_store
+   complex, dimension(:, :, :, :), allocatable :: q_store
 
 end module adjoint_field_arrays

@@ -24,6 +24,11 @@ program stella
    use kt_grids, only: naky, nakx
    use stella_diagnostics, only: navg
 
+   use adjoint_convergence, only: omega_convergence1, omega_convergence2
+   use adjoint_field_arrays, only: omega_g
+   use stella_diagnostics, only: omega_vs_time
+   use constants, only: zi
+
    implicit none
 
    logical :: debug = .false.
@@ -39,14 +44,12 @@ program stella
    !! For Adjoint
    logical :: header_printed = .False.
    logical :: adjoint = .true.
-   logical :: track_g = .True.
 
-   integer :: istep_initial
+!   integer :: istep_initial
    logical :: stop_convergence
    logical :: do_average
    logical :: converged
 
-   integer :: ivmu, iz
    integer :: no_p
    real :: istep_final
 
@@ -54,17 +57,15 @@ program stella
 
    !> Initialize stella
    call init_stella(istep0, get_git_version(), get_git_date())
+
    !> Diagnose stella
    if (debug) write (*, *) 'stella::diagnose_stella'
    if (istep0 == 0) call diagnose_stella(istep0)
-
-   no_p = np0
-
    if (adjoint) then
       !! Adjoint - Initialise arrays needed for adjoint method
       !!           growth rate
+      no_p = np0
       call init_adjoint(no_p)
-
       do_average = .True.
       converged = .False.
       stop_convergence = .False.
@@ -87,20 +88,28 @@ program stella
       call time_message(.false., time_diagnostics, ' diagnostics')
       call diagnose_stella(istep)
       call time_message(.false., time_diagnostics, ' diagnostics')
-      !!ADJOINT_INCLUDE CONVERGENCE TEST
-      !! adjoint-plot one element of gnew
-      if (track_g) then
-         open (11, file="text_file_outputs/gtrack.txt", status="unknown", action="write", position="append")
-         write (11, *) code_time, abs(gnew(1, 1, 0, 1, 1)), real(gnew(1, 1, 0, 1, 1)), aimag(gnew(1, 1, 0, 1, 1))
-         close (11)
-      end if
-
+      !! Adjoint convergence test
+      ! if (adjoint) then
+      !    if (do_average) then
+      !       call omega_convergence1 (istep, converged)
+      !       if (converged) then
+      !          do_average = .False.
+      !          istep_initial = istep
+      !       end if
+      !    else
+      !       call omega_convergence2 (istep, istep_initial, stop_convergence)
+      !    end if
+      !    if (stop_convergence) exit
+      ! end if
       ierr = error_unit()
       call flush_output_file(ierr)
       istep = istep + 1
    end do
 
    istep_final = istep
+
+!   omega_g = -zi*sum(omega_vs_time,dim=1)/real(navg)
+!   write(*,*) 'omega_g', omega_g(1,1)
 
    if (adjoint) then
       !! Adjoint - Get growth rat + S=store final values of g and phi as gsave and phi_save
@@ -145,7 +154,7 @@ contains
 
       use millerlocal, only: del
       !use adjoint_p_derivatives, only: integrate_unpert
-
+      use mp, only: proc0
       use adjoint_write_files, only: write_files_derivative, write_files_omega
 
       implicit none
@@ -161,34 +170,36 @@ contains
       logical :: unpert = .true.
       complex(8), dimension(:, :), allocatable :: lag_out
 
-      complex :: vol_unpert
-      complex, dimension(:), allocatable  :: vol_correction
-
       logical :: new_file
+
+      integer, dimension(11) :: loop_var = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+      integer :: j
 
       call init_stella(istep0, get_git_version(), get_git_date(), adjoint_var=0)
       new_file = .true.
-
+      do_average = .True.
+      converged = .False.
+      stop_convergence = .False.
       call write_files_omega(istep_final)
 
-    !! Adjoint - convergence arrays for adjoint variable
-
+      !! Adjoint - convergence arrays for adjoint variable
       allocate (lag_out(naky, nakx)); lag_out = 0.0
-      allocate (vol_correction(no_p)); vol_correction = 0.0
 
       fields_updated = .false.
       call advance_fields(gnew, phi, apar, dist='gbar', adjoint=adjoint)
 
-      write (*, '(A)') "*************************** "
-      write (*, '(A)') "**** starting adjoint ***** "
-      write (*, '(A)') "*************************** "
+      if (proc0) then
+         write (*, '(A)') "*************************** "
+         write (*, '(A)') "**** starting adjoint ***** "
+         write (*, '(A)') "*************************** "
+      end if
 
       ! Diagnose Stella
       if (debug) write (*, *) 'stella:: adjoint_diagnose_stella'
       if (istep0 == 0) call diagnose_stella(istep0)
 
-    !! Advance Stella
-    !! Adjoint - run stella for adjoint variable until gnew is time independent
+      !! Advance Stella
+      !! Adjoint - run stella for adjoint variable until gnew is time independent
       if (debug) write (*, *) 'stella::adjoint_advance_stella'
       do istep = (istep0 + 1), nstep
          if (debug) write (*, *) 'istep = ', istep
@@ -198,70 +209,65 @@ contains
          if (debug) write (*, *) 'Adjoint_stella::diagnose stella'
          call diagnose_stella(istep)
          call time_message(.false., time_diagnostics, ' diagnostics')
-
-         if (track_adjoint) then
-            open (11, file="text_file_outputs/lamtrack.txt", status="unknown", action="write", position="append")
-            write (11, *) code_time, abs(gnew(1, 1, 0, 1, 1))
-            close (11)
-         end if
-
+         !! Adjoint - Convergence test
+         ! if (do_average) then
+         !    call omega_convergence1 (istep, converged)
+         !    if (converged) then
+         !       do_average = .False.
+         !       istep_initial = istep
+         !    end if
+         ! else
+         !    call omega_convergence2 (istep, istep_initial, stop_convergence)
+         ! end if
+         ! if (stop_convergence) exit
          if (mod(istep, 10) == 0) call checkstop(stop_stella)
          if (stop_stella) exit
          ierr = error_unit()
          call flush_output_file(ierr)
       end do
 
-    !! Adjoint - Save adjoint variables & adjust to be the correct variables needed for the
-    !!           integrations
+      !! Adjoint - Save adjoint variables & adjust to be the correct variables needed for the
+      !!           integrations
       if (debug) write (*, *) 'Adjoint_stella::get_adjoint_variables'
       call get_adjoint_save
       call scatter(kxkyz2vmu, lam_save, gvmu)
-
-      !call integrate_unpert (vol_unpert)
-
-    !! Adjoint - Find unperturbed Lagrangian terms
+      !! Adjoint - Find unperturbed Lagrangian terms
       if (debug) write (*, *) 'Adjoint_stella::call perturb p for unperturbed case'
       call perturb_p(g_unpert, q_unpert)
-    !! Adjoint - get denominator; int(lambda*g)
+      !! Adjoint - get denominator; int(lambda*g)
       if (debug) write (*, *) 'Adjoint_stella::get deonominator'
       call get_denominator
       if (debug) write (*, *) 'Adjoint_stella::finish stella after adjoint simulation'
       call finish_stella
 
-      write (*, *) 'ready to perturb adjoint'
-    !! Adjoint - now pertub geometric quantites
-      do adjoint_var = 1, no_p
-       !! Adjoint - init stella with perturbed geometric quantities
-       !!         - read_local_parameters in miller_local need to be change
-       !!         - want to keep integration varibles constant though (i.e. mu, vpa, zed)
+      !! Adjoint - now pertub geometric quantites
+      do j = 1, size(loop_var)
+         adjoint_var = loop_var(j)
+         !! Adjoint - init stella with perturbed geometric quantities
+         !!         - read_local_parameters in miller_local need to be change
+         !!         - want to keep integration varibles constant though (i.e. mu, vpa, zed)
 
-       !!TODO - creat a list of which variables correspond tp which adjoint variables and print out string
-         write (*, *) 'perturb adjoint_variable =', adjoint_var
+         !!TODO - creat a list of which variables correspond tp which adjoint variables and print out string
+         if (proc0) write (*, *) 'perturb adjoint_variable =', adjoint_var
          if (debug) write (*, *) 'Adjoint_stella::init stella for change_p = ', adjoint_var
          call init_stella(istep0, get_git_version(), get_git_date(), adjoint_var)
 
-       !! Adjoint - Calculate d_p(gamma) for each p
+         !! Adjoint - Calculate d_p(gamma) for each p
          if (debug) write (*, *) 'Adjoint_stella::calculate derivatives'
-         call perturb_p(g_store(:, :, :, :, :, adjoint_var), q_store(:, :, :, :, adjoint_var))
+         call perturb_p(g_store, q_store)
 
-         g_store(:, :, :, :, :, adjoint_var) = (g_store(:, :, :, :, :, adjoint_var) - g_unpert) / del
-         q_store(:, :, :, :, adjoint_var) = (q_store(:, :, :, :, adjoint_var) - q_unpert) / del
+         g_store = (g_store - g_unpert) / del
+         q_store = (q_store - q_unpert) / del
 
          lag_out = 0.0
-         call lagrangian_integrals(g_store(:, :, :, :, :, adjoint_var), q_store(:, :, :, :, adjoint_var), lag_out)
-
+         call lagrangian_integrals(g_store, q_store, lag_out)
          derivative = -lag_out / (denominator)
-
-         ! open(12, file="change_denom.txt", status="unknown",action="write",position="append")
-         ! write(12, *) adjoint_var, derivative (1,1)
-         ! close(12)
-
+         write (*, *) 'derivative =', derivative
          call write_files_derivative(adjoint_var, derivative, new_file)
          new_file = .false.
 
          if (adjoint_var == no_p) then
             deallocate (lag_out)
-            deallocate (vol_correction)
             call finish_adjoint
             call finish_stella(last_call=.True.)
          else
@@ -269,24 +275,6 @@ contains
             call finish_stella
          end if
       end do
-
-      !  !! adjoint with integrals/jacobians unperturbed
-      !  call init_stella (istep0, get_git_version(), get_git_date(), 0)
-      !  do adjoint_var = 1, no_p
-      !     write(*,*) 'adjoint variable :', adjoint_var
-      !     call lagrangian_integrals (g_store(:,:,:,:,:,adjoint_var), q_store(:,:,:,:,adjoint_var), lag_out)
-
-      !     derivative = -lag_out/(denominator)
-
-      !     open(12, file="change_denom.txt", status="unknown",action="write",position="append")
-      !     write(12,*) adjoint_var, derivative(1,1)
-      !     close(12)
-      !  end do
-
-      !  deallocate(lag_out)
-      !  deallocate(vol_correction)
-      !  call finish_adjoint
-      !  call finish_stella (last_call = .True.)
 
    end subroutine run_adjoint
 

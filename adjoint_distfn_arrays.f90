@@ -14,7 +14,7 @@ module adjoint_distfn_arrays
 
    complex, dimension(:, :, :, :, :), allocatable :: g_unpert
 
-   complex, dimension(:, :, :, :, :, :), allocatable :: g_store
+   complex, dimension(:, :, :, :, :), allocatable :: g_store
 
    complex, dimension(:, :, :, :, :), allocatable :: source_adjoint
 

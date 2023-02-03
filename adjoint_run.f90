@@ -17,15 +17,14 @@ contains
 
    subroutine init_adjoint(np)
 
-!    use adjoint_convergence, only: init_convergence, init_adjoint_convergence
+      use adjoint_convergence, only: init_convergence
       use adjoint_p_derivatives, only: allocate_unpert
 
       implicit none
 
       integer, intent(in) :: np
 
-!    call init_convergence
-!    call init_adjoint_convergence
+      call init_convergence
       call allocate_adjoint_variables
       call allocate_unpert
       call allocate_derivative_terms(np)
@@ -235,12 +234,12 @@ contains
       integer, intent(in) :: np
 
       if (.not. allocated(g_store)) then
-         allocate (g_store(naky, nakx, -nzgrid:nzgrid, ntubes, vmu_lo%llim_proc:vmu_lo%ulim_alloc, np))
+         allocate (g_store(naky, nakx, -nzgrid:nzgrid, ntubes, vmu_lo%llim_proc:vmu_lo%ulim_alloc))
          g_store = 0.0
       end if
 
       if (.not. allocated(q_store)) then
-         allocate (q_store(naky, nakx, -nzgrid:nzgrid, ntubes, np))
+         allocate (q_store(naky, nakx, -nzgrid:nzgrid, ntubes))
          q_store = 0.0
       end if
 
@@ -261,11 +260,12 @@ contains
 
       use stella_layouts, only: vmu_lo
 
-      use adjoint_field_arrays, only: omega_g
       use stella_diagnostics, only: omega_vs_time, navg
       use constants, only: zi
 
       use zgrid, only: nzgrid
+
+      use mp, only: broadcast, proc0
       implicit none
 
       integer :: iky, ikx
@@ -273,7 +273,9 @@ contains
 
     !! Adjoint - Store frequency: omega_g = gamma + i*omega
       omega_g = -zi * sum(omega_vs_time, dim=1) / real(navg)
-      write (*, *) 'omega_g', omega_g(1, 1)
+
+      call broadcast(omega_g)
+      if (proc0) write (*, *) 'omega_g', omega_g(1, 1)
 
       do ivmu = vmu_lo%llim_proc, vmu_lo%ulim_proc
          do iky = 1, naky
@@ -377,14 +379,14 @@ contains
    subroutine finish_adjoint
 
       use adjoint_p_derivatives, only: deallocate_p_derivatives
-!    use adjoint_convergence, only: deallocate_convergence
+      use adjoint_convergence, only: deallocate_convergence
 
       implicit none
 
       call finish_pert_terms
       call deallocate_p_derivatives
       call deallocate_adjoint_variables
-!    call deallocate_convergence
+      call deallocate_convergence
 
    end subroutine finish_adjoint
 
