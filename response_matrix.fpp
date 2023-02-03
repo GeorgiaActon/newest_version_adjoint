@@ -71,6 +71,7 @@ contains
       character(len=15) :: fmt, job_str
       character(len=100) :: file_name
       integer :: istatus
+
       istatus = 0
 
       if (proc0 .and. debug) then

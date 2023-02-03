@@ -1482,6 +1482,11 @@ contains
       use fields_arrays, only: phi
 
       use kt_grids, only: naky, nakx
+
+      use parallel_streaming, only: advance_parallel_streaming_explicit
+      use physics_flags, only: include_parallel_streaming
+      use run_parameters, only: stream_implicit
+
       implicit none
 
       complex, dimension(:, :, -nzgrid:, :, vmu_lo%llim_proc:), intent(in) :: gin
@@ -1501,11 +1506,15 @@ contains
         !! Adjoint - For wdrift terms we pass a logical such that for the adjoint equation only
         !!           wdrift_g terms are included
          phi = 0.0
+         if (include_parallel_streaming .and. (.not. stream_implicit)) then
+            call advance_parallel_streaming_explicit(gin, phi, rhs, adjoint)
+         end if
          call advance_wdrifty_explicit(gin, phi, rhs, adjoint)
          call advance_wdriftx_explicit(gin, phi, rhs, adjoint)
          call add_omega_term(gin, rhs)
          call add_adjoint_field(gin, rhs)
       end if
+
    end subroutine solve_adjoint
 
    subroutine add_omega_term(gin, src)
@@ -2875,11 +2884,12 @@ contains
          if (present(adjoint)) then
             phi = 0.
             apar = 0.
-            if (include_parallel_streaming) &
+            if (stream_implicit .and. include_parallel_streaming) then
+!            if (include_parallel_streaming) &
                call advance_parallel_streaming_implicit(g, phi, apar, adjoint)
-
-            fields_updated = .false.
-            call advance_fields(g, phi, apar, dist='gbar', adjoint=adjoint)
+               fields_updated = .false.
+               call advance_fields(g, phi, apar, dist='gbar', adjoint=adjoint)
+            end if
          else
             if ((stream_implicit .or. driftkinetic_implicit) .and. include_parallel_streaming) then
                call advance_parallel_streaming_implicit(g, phi, apar)
@@ -2904,10 +2914,11 @@ contains
          if (present(adjoint)) then
             phi = 0.
             apar = 0.
-            if (include_parallel_streaming) &
+            if (stream_implicit .and. include_parallel_streaming) then
                call advance_parallel_streaming_implicit(g, phi, apar, adjoint)
-            fields_updated = .false.
-            call advance_fields(g, phi, apar, dist='gbar', adjoint=adjoint)
+               fields_updated = .false.
+               call advance_fields(g, phi, apar, dist='gbar', adjoint=adjoint)
+            end if
          else
             if ((stream_implicit .or. driftkinetic_implicit) .and. include_parallel_streaming) then
                call advance_parallel_streaming_implicit(g, phi, apar)

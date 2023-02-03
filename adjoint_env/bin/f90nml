@@ -1,0 +1,5 @@
+#!/marconi_work/FUA36_EMROT/acton/adjoint_stella/adjoint_env/bin/python3
+
+from f90nml import cli
+
+cli.parse()

@@ -91,29 +91,35 @@ contains
 
 !    use stella_time, only: code_dt
       use run_parameters, only: nstep
+      use mp, only: proc0
 
       implicit none
 
       real, intent(in) :: istep_final
 
-      open (16, file="adjoint_files/adjoint_final_time.dat", status="replace", action="write")
-      write (16, *) istep_final - 1
-      write (16, *) nstep
-      close (16)
+      if(proc0) then 
+         open (16, file="adjoint_files/adjoint_final_time.dat", status="replace", action="write")
+         write (16, *) istep_final - 1
+         write (16, *) nstep
+         close (16)
+      end if
 
    end subroutine write_final_time
 
    subroutine write_files_omega(istep_final)
 
       use adjoint_field_arrays, only: omega_g
+      use mp, only: proc0
 
       implicit none
 
       real, intent(in) :: istep_final
 
-      open (13, file="adjoint_files/adjoint_omega.dat", status="replace", action="write")
-      write (13, *) real(omega_g), aimag(omega_g)
-      close (13)
+      if(proc0) then 
+         open (13, file="adjoint_files/adjoint_omega.dat", status="replace", action="write")
+         write (13, *) real(omega_g)
+         close (13)
+      end if
 
       call write_g_start
       call write_final_time(istep_final)
@@ -124,6 +130,7 @@ contains
 
       use adjoint_field_arrays, only: omega_g
       use stella_geometry, only: geo_surf
+      use mp, only: proc0
 
       implicit none
 
@@ -132,13 +139,17 @@ contains
       logical, intent(in) :: new_file
 
       if (new_file) then
-         open (12, file="adjoint_files/adjoint_derivatives.dat", status="replace", action="write")!,position="replace")
-         write (12, *) real(derivative(1, 1)), aimag(derivative(1, 1))
-         close (12)
+         if(proc0) then 
+            open (12, file="adjoint_files/adjoint_derivatives.dat", status="replace", action="write")!,position="replace")
+            write (12, *) real(derivative(1, 1))
+            close (12)
+         end if
       else
-         open (12, file="adjoint_files/adjoint_derivatives.dat", status="unknown", action="write", position="append")
-         write (12, *) real(derivative(1, 1)), aimag(derivative(1, 1))
-         close (12)
+         if(proc0) then 
+            open (12, file="adjoint_files/adjoint_derivatives.dat", status="unknown", action="write", position="append")
+            write (12, *) real(derivative(1, 1))
+            close (12)
+         end if
       end if
 
       if (.not. new_file) call write_g_final

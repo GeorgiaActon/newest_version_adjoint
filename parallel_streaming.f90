@@ -179,7 +179,7 @@ contains
 
    end subroutine init_invert_stream_operator
 
-   subroutine advance_parallel_streaming_explicit(g, phi, gout)
+   subroutine advance_parallel_streaming_explicit(g, phi, gout, adjoint)
 
       use mp, only: proc0
       use stella_layouts, only: vmu_lo
@@ -206,6 +206,7 @@ contains
       complex, dimension(:, :, :, :), allocatable :: g0y, g1y
       complex, dimension(:, :), allocatable :: g0_swap
 
+      logical, optional, intent (in) :: adjoint 
       !> if flux tube simulation parallel streaming stays in ky,kx,z space with ky,kx,z local
       !> if full flux surface (flux annulus), will need to calculate in y space
 
@@ -222,23 +223,24 @@ contains
          allocate (g0y(ny, ikx_max, -nzgrid:nzgrid, ntubes))
          allocate (g1y(ny, ikx_max, -nzgrid:nzgrid, ntubes))
       end if
-
       do ivmu = vmu_lo%llim_proc, vmu_lo%ulim_proc
          !> get (iv,imu,is) indices corresponding to ivmu super-index
          iv = iv_idx(vmu_lo, ivmu)
          imu = imu_idx(vmu_lo, ivmu)
          is = is_idx(vmu_lo, ivmu)
-
-         !> obtain <phi> (or <phi>-phi if driftkinetic_implicit=T)
-         call gyro_average(phi, ivmu, g0(:, :, :, :))
-         if (driftkinetic_implicit) g0(:, :, :, :) = g0(:, :, :, :) - phi
-
-         !> get d<phi>/dz, with z the parallel coordinate and store in dgphi_dz
-         !> note that this should be a centered difference to avoid numerical
-         !> unpleasantness to do with inexact cancellations in later velocity integration
-         !> see appendix of the stella JCP 2019 for details
-         call get_dgdz_centered(g0, ivmu, dgphi_dz)
-
+         if(.not. present(adjoint)) then 
+            !> obtain <phi> (or <phi>-phi if driftkinetic_implicit=T)
+            call gyro_average(phi, ivmu, g0(:, :, :, :))
+            if (driftkinetic_implicit) g0(:, :, :, :) = g0(:, :, :, :) - phi
+            
+            !> get d<phi>/dz, with z the parallel coordinate and store in dgphi_dz
+            !> note that this should be a centered difference to avoid numerical
+            !> unpleasantness to do with inexact cancellations in later velocity integration
+            !> see appendix of the stella JCP 2019 for details
+            call get_dgdz_centered(g0, ivmu, dgphi_dz)
+         else 
+            dgphi_dz = 0.0
+         end if
          !> if driftkinetic_implicit=T, then only want to treat vpar . grad (<phi>-phi)*F0 term explicitly;
          !> in this case, zero out dg/dz term (or d(g/F)/dz for full-flux-surface)
          if (driftkinetic_implicit) then
@@ -294,13 +296,13 @@ contains
             call add_stream_term_ffs(g0y, ivmu, gout(:, :, :, :, ivmu))
          else
             ia = 1
-            g0(:, :, :, :) = g0(:, :, :, :) + dgphi_dz(:, :, :, :) * spec(is)%zt * maxwell_fac(is) &
-                             * maxwell_vpa(iv, is) * spread(spread(spread(maxwell_mu(ia, :, imu, is), 1, naky), 2, nakx), 4, ntubes)
-
+            if(.not. present(adjoint)) then
+               g0(:, :, :, :) = g0(:, :, :, :) + dgphi_dz(:, :, :, :) * spec(is)%zt * maxwell_fac(is) &
+                    * maxwell_vpa(iv, is) * spread(spread(spread(maxwell_mu(ia, :, imu, is), 1, naky), 2, nakx), 4, ntubes)
+            end if
             ! multiply dg/dz with vpa*(b . grad z) and add to source (RHS of GK equation)
             call add_stream_term(g0, ivmu, gout(:, :, :, :, ivmu))
          end if
-
       end do
 
       !> deallocate intermediate arrays used in this subroutine
@@ -309,6 +311,7 @@ contains
 
       !> finish timing the subroutine
       if (proc0) call time_message(.false., time_parallel_streaming(:, 1), ' Stream advance')
+      write(*,*) 'finished par stream' 
 
    end subroutine advance_parallel_streaming_explicit
 
